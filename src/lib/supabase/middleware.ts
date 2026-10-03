@@ -15,6 +15,11 @@ function isSupabaseConfigured(): boolean {
 }
 
 export async function updateSession(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  if (pathname === '/manifest.json' || pathname === '/sw.js') {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
 
   const isAuthPage = request.nextUrl.pathname.startsWith('/login');
