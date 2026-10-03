@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import PushNotificationToggle from './PushNotificationToggle';
+import InstallPwaButton from './InstallPwaButton';
 
 interface HeaderProps {
   user: SupabaseUser;
@@ -137,6 +138,9 @@ export default function Header({ user }: HeaderProps) {
           <span className="hidden sm:inline">Search</span>
           <span className="hidden sm:inline text-xs text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded">⌘K</span>
         </button>
+
+        {/* Install PWA Button */}
+        <InstallPwaButton className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 bg-gray-50 hover:bg-gray-100 text-gray-700 border border-gray-200 text-xs font-semibold rounded-lg shadow-2xs transition-all" />
 
         {/* Push Notification Toggle */}
         <PushNotificationToggle />

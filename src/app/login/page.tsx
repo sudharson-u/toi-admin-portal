@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/client';
 import { Newspaper, Eye, EyeOff, Loader2 } from 'lucide-react';
+import InstallPwaButton from '@/components/layout/InstallPwaButton';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -138,7 +139,11 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-xs text-slate-500 mt-6">
+          <div className="mt-4 flex justify-center">
+            <InstallPwaButton className="w-full justify-center py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-semibold rounded-xl border border-white/20 transition-all flex items-center gap-2" />
+          </div>
+
+          <p className="text-center text-xs text-slate-500 mt-5">
             Secured Admin Access • Times of India
           </p>
         </div>
