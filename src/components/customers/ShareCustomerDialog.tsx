@@ -24,23 +24,20 @@ export default function ShareCustomerDialog({ customer, currentSub, onClose }: S
   const [copied, setCopied] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
-  const orderId = customer.order_id || 'N/A';
-  const customerName = customer.customer_name || 'N/A';
-  const customerAddress = customer.address || 'N/A';
-  const phoneNumber = customer.mobile_number || 'N/A';
-  const startDate = currentSub?.start_date ? formatDate(currentSub.start_date) : 'N/A';
-  const endDate = currentSub?.end_date ? formatDate(currentSub.end_date) : 'N/A';
+  const orderId = customer.order_id || '';
+  const customerName = customer.customer_name || '';
+  const customerAddress = customer.address || '';
+  const phoneNumber = customer.mobile_number || '';
+  const startDate = currentSub?.start_date ? formatDate(currentSub.start_date) : '';
+  const endDate = currentSub?.end_date ? formatDate(currentSub.end_date) : '';
 
-  const shareText = `📰 *Times of India - Customer Subscription Details*
-━━━━━━━━━━━━━━━━━━━━━━━━
-👤 *Customer Name:* ${customerName}
-🆔 *Order ID:* ${orderId}
-📍 *Customer Address:* ${customerAddress}
-📞 *Phone Number:* ${phoneNumber}
-📅 *Start Date:* ${startDate}
-⏳ *End Date:* ${endDate}
-━━━━━━━━━━━━━━━━━━━━━━━━
-Shared via TOI Circulation Portal`;
+  const shareText = `Order ID: ${orderId}
+Customer Name:
+${customerName}
+Address: ${customerAddress}
+Phone Number: ${phoneNumber}
+Start Date: ${startDate}
+End Date: ${endDate}`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
@@ -101,48 +98,8 @@ Shared via TOI Circulation Portal`;
         {/* Content */}
         <div className="p-6 space-y-4">
           {/* Structured Details Preview */}
-          <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 space-y-2.5 text-xs">
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200/60">
-              <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                <Hash className="w-3.5 h-3.5 text-gray-400" /> Order ID:
-              </span>
-              <span className="font-mono font-bold text-gray-900">{orderId}</span>
-            </div>
-
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200/60">
-              <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                <User className="w-3.5 h-3.5 text-gray-400" /> Customer Name:
-              </span>
-              <span className="font-bold text-gray-900">{customerName}</span>
-            </div>
-
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200/60">
-              <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                <Phone className="w-3.5 h-3.5 text-gray-400" /> Phone Number:
-              </span>
-              <span className="font-medium text-gray-900">{phoneNumber}</span>
-            </div>
-
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200/60">
-              <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" /> Start Date:
-              </span>
-              <span className="font-medium text-gray-900">{startDate}</span>
-            </div>
-
-            <div className="flex items-center justify-between pb-1.5 border-b border-gray-200/60">
-              <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                <Calendar className="w-3.5 h-3.5 text-gray-400" /> End Date:
-              </span>
-              <span className="font-semibold text-red-600">{endDate}</span>
-            </div>
-
-            <div className="flex items-start justify-between pt-0.5">
-              <span className="text-gray-500 flex items-center gap-1.5 font-medium flex-shrink-0">
-                <MapPin className="w-3.5 h-3.5 text-gray-400 mt-0.5" /> Address:
-              </span>
-              <span className="text-gray-800 text-right leading-snug ml-4 text-[11px]">{customerAddress}</span>
-            </div>
+          <div className="bg-slate-50/90 border border-slate-200/90 rounded-xl p-4 font-mono text-xs text-gray-800 whitespace-pre-line leading-relaxed select-all shadow-2xs">
+            {shareText}
           </div>
 
           {/* Buttons */}

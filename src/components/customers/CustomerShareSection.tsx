@@ -23,23 +23,20 @@ export default function CustomerShareSection({ customer, currentSub }: CustomerS
   const [copied, setCopied] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
-  const orderId = customer.order_id || 'N/A';
-  const customerName = customer.customer_name || 'N/A';
-  const customerAddress = customer.address || 'N/A';
-  const phoneNumber = customer.mobile_number || 'N/A';
-  const startDate = currentSub?.start_date ? formatDate(currentSub.start_date) : 'N/A';
-  const endDate = currentSub?.end_date ? formatDate(currentSub.end_date) : 'N/A';
+  const orderId = customer.order_id || '';
+  const customerName = customer.customer_name || '';
+  const customerAddress = customer.address || '';
+  const phoneNumber = customer.mobile_number || '';
+  const startDate = currentSub?.start_date ? formatDate(currentSub.start_date) : '';
+  const endDate = currentSub?.end_date ? formatDate(currentSub.end_date) : '';
 
-  const shareText = `📰 *Times of India - Customer Subscription Details*
-━━━━━━━━━━━━━━━━━━━━━━━━
-👤 *Customer Name:* ${customerName}
-🆔 *Order ID:* ${orderId}
-📍 *Customer Address:* ${customerAddress}
-📞 *Phone Number:* ${phoneNumber}
-📅 *Start Date:* ${startDate}
-⏳ *End Date:* ${endDate}
-━━━━━━━━━━━━━━━━━━━━━━━━
-Shared via TOI Circulation Portal`;
+  const shareText = `Order ID: ${orderId}
+Customer Name:
+${customerName}
+Address: ${customerAddress}
+Phone Number: ${phoneNumber}
+Start Date: ${startDate}
+End Date: ${endDate}`;
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
@@ -114,44 +111,8 @@ Shared via TOI Circulation Portal`;
       </div>
 
       {/* Structured Details Preview Box */}
-      <div className="bg-slate-50/80 border border-gray-200/80 rounded-xl p-3.5 space-y-2 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-          <div className="flex items-center gap-2 py-1 border-b sm:border-b-0 border-gray-200/50">
-            <Hash className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-500 font-medium">Order ID:</span>
-            <span className="font-mono font-bold text-gray-800 ml-auto sm:ml-0">{orderId}</span>
-          </div>
-
-          <div className="flex items-center gap-2 py-1 border-b sm:border-b-0 border-gray-200/50">
-            <User className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-500 font-medium">Customer:</span>
-            <span className="font-bold text-gray-900 truncate ml-auto sm:ml-0">{customerName}</span>
-          </div>
-
-          <div className="flex items-center gap-2 py-1 border-b sm:border-b-0 border-gray-200/50">
-            <Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-500 font-medium">Phone:</span>
-            <span className="font-medium text-gray-800 ml-auto sm:ml-0">{phoneNumber}</span>
-          </div>
-
-          <div className="flex items-center gap-2 py-1 border-b sm:border-b-0 border-gray-200/50">
-            <Calendar className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
-            <span className="text-gray-500 font-medium">Start Date:</span>
-            <span className="font-medium text-gray-800 ml-auto sm:ml-0">{startDate}</span>
-          </div>
-
-          <div className="flex items-center gap-2 py-1">
-            <Calendar className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
-            <span className="text-gray-500 font-medium">End Date:</span>
-            <span className="font-semibold text-red-600 ml-auto sm:ml-0">{endDate}</span>
-          </div>
-
-          <div className="flex items-start gap-2 py-1 sm:col-span-2">
-            <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
-            <span className="text-gray-500 font-medium flex-shrink-0">Address:</span>
-            <span className="text-gray-700 text-[11px] leading-snug truncate sm:whitespace-normal">{customerAddress}</span>
-          </div>
-        </div>
+      <div className="bg-slate-50/90 border border-gray-200/90 rounded-xl p-4 font-mono text-xs text-gray-800 whitespace-pre-line leading-relaxed mb-4 select-all shadow-2xs">
+        {shareText}
       </div>
 
       {/* Share Buttons */}
