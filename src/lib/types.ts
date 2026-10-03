@@ -9,6 +9,7 @@ export interface Customer {
   address: string;
   mobile_number: string;
   order_id: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
   // joined from subscriptions

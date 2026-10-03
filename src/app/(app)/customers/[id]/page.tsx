@@ -8,6 +8,7 @@ import {
 import { formatDate, calculateStatus, calculateDaysRemaining, calculateNotificationDate, getStatusLabel, getStatusColor, cn } from '@/lib/utils';
 import { parseISO } from 'date-fns';
 import CustomerActions from '@/components/customers/CustomerActions';
+import CustomerNotesSection from '@/components/customers/CustomerNotesSection';
 import { getMockCustomers } from '@/lib/mockData';
 
 async function getCustomer(id: string) {
@@ -55,7 +56,20 @@ async function getCustomer(id: string) {
     .order('created_at', { ascending: false })
     .limit(5);
 
-  return { customer, auditLogs: auditLogs || [] };
+  // Fetch latest note
+  const { data: noteLog } = await supabase
+    .from('audit_logs')
+    .select('new_value, created_at')
+    .eq('customer_id', id)
+    .eq('action', 'customer_note')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const note = noteLog?.new_value?.note || (customer as any)?.notes || '';
+  const noteUpdatedAt = noteLog?.created_at || (customer as any)?.updated_at || '';
+
+  return { customer, auditLogs: auditLogs || [], note, noteUpdatedAt };
 }
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -64,7 +78,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
 
   if (!result) notFound();
 
-  const { customer, auditLogs } = result;
+  const { customer, auditLogs, note, noteUpdatedAt } = result;
   const currentSub = customer.subscriptions?.find((s: { is_current: boolean }) => s.is_current);
   const historicalSubs = customer.subscriptions?.filter((s: { is_current: boolean }) => !s.is_current) || [];
 
@@ -246,6 +260,13 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
               </div>
             )}
           </div>
+
+          {/* Customer Notes & Special Instructions */}
+          <CustomerNotesSection
+            customerId={customer.id}
+            initialNotes={note}
+            lastUpdated={noteUpdatedAt}
+          />
 
           {/* Subscription History */}
           {historicalSubs.length > 0 && (
