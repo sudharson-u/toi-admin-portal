@@ -5,9 +5,10 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, Users, RefreshCw, Bell, FileText,
-  Upload, Settings, Newspaper, ChevronLeft, ChevronRight, X
+  Upload, Settings, ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import ThemeToggle from '@/components/theme/ThemeToggle';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -29,7 +30,7 @@ export default function Sidebar() {
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden backdrop-blur-xs transition-opacity"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -38,37 +39,37 @@ export default function Sidebar() {
       <button
         id="mobile-menu-toggle"
         onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 lg:hidden bg-white border border-gray-200 rounded-lg p-2 shadow-sm"
+        className="fixed top-4 left-4 z-50 lg:hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-750 text-gray-700 dark:text-gray-200 rounded-lg p-2 shadow-sm"
       >
-        <ChevronRight className="w-4 h-4 text-gray-600" />
+        <ChevronRight className="w-4 h-4" />
       </button>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-white border-r border-gray-100 transition-all duration-300',
+          'fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-white dark:bg-[#0f172a] border-r border-gray-100 dark:border-gray-800 transition-all duration-300',
           collapsed ? 'w-16' : 'w-60',
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
       >
         {/* Logo */}
         <div className={cn(
-          'flex items-center gap-3 px-4 py-5 border-b border-gray-100',
+          'flex items-center gap-3 px-4 py-5 border-b border-gray-100 dark:border-gray-800/80',
           collapsed && 'justify-center px-2'
         )}>
-          <div className="flex-shrink-0 w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-sm border border-red-100">
+          <div className="flex-shrink-0 w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center shadow-sm border border-red-100 dark:border-red-950 bg-red-600">
             <img src="/logo.png" alt="TOI Logo" className="w-full h-full object-cover" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-xs font-black tracking-wider text-slate-900 leading-tight">THE TIMES OF INDIA</p>
-              <p className="text-xs text-red-600 font-semibold leading-tight truncate">Admin: Umapathy</p>
+              <p className="text-xs font-black tracking-wider text-slate-900 dark:text-white leading-tight">THE TIMES OF INDIA</p>
+              <p className="text-xs text-red-600 dark:text-red-400 font-semibold leading-tight truncate">Admin: Umapathy</p>
             </div>
           )}
           {/* Mobile close */}
           <button
             onClick={() => setMobileOpen(false)}
-            className={cn('lg:hidden ml-auto text-gray-400 hover:text-gray-600', collapsed && 'hidden')}
+            className={cn('lg:hidden ml-auto text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1', collapsed && 'hidden')}
           >
             <X className="w-4 h-4" />
           </button>
@@ -97,8 +98,13 @@ export default function Sidebar() {
           })}
         </nav>
 
+        {/* Theme Switcher placed in the green circled area in the sidebar */}
+        <div className="border-t border-gray-100 dark:border-gray-800">
+          <ThemeToggle collapsed={collapsed} />
+        </div>
+
         {/* Collapse button (desktop only) */}
-        <div className="hidden lg:flex px-2 py-3 border-t border-gray-100">
+        <div className="hidden lg:flex px-2 py-3 border-t border-gray-100 dark:border-gray-800">
           <button
             id="sidebar-collapse-btn"
             onClick={() => setCollapsed(!collapsed)}

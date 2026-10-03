@@ -1,17 +1,30 @@
-import { Settings, Database, Bell, Shield, Newspaper } from 'lucide-react';
+import { Settings, Database, Bell, Shield, Newspaper, Palette } from 'lucide-react';
+import ThemeSettingsSelector from '@/components/theme/ThemeSettingsSelector';
 
 export default function SettingsPage() {
   return (
     <div className="page-container max-w-2xl">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">
-          <Settings className="w-5 h-5 text-gray-600" />
-          <h1 className="text-xl font-bold text-gray-900">Settings</h1>
+          <Settings className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          <h1 className="text-xl font-bold text-gray-900 dark:text-white">Settings</h1>
         </div>
-        <p className="text-sm text-gray-500">Application configuration and preferences</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Application configuration and preferences</p>
       </div>
 
       <div className="space-y-4">
+        {/* Appearance & Theme */}
+        <div className="card p-5">
+          <div className="flex items-center gap-2 mb-2">
+            <Palette className="w-4 h-4 text-rose-600" />
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white">Theme & Appearance</h2>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+            Customize how TOI Admin Portal looks. Switch between light and dark themes anytime.
+          </p>
+          <ThemeSettingsSelector />
+        </div>
+
         {/* App Info */}
         <div className="card p-5">
           <div className="flex items-center gap-3 mb-4">

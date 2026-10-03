@@ -148,11 +148,11 @@ export function getStatusLabel(status: SubscriptionStatus): string {
 
 export function getStatusColor(status: SubscriptionStatus): string {
   switch (status) {
-    case 'active': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-    case 'renew_soon': return 'text-amber-700 bg-amber-50 border-amber-200';
-    case 'expiring_this_month': return 'text-orange-700 bg-orange-50 border-orange-200';
-    case 'expired': return 'text-red-700 bg-red-50 border-red-200';
-    case 'renewed': return 'text-blue-700 bg-blue-50 border-blue-200';
+    case 'active': return 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-950/50 dark:border-emerald-800/60';
+    case 'renew_soon': return 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-950/50 dark:border-amber-800/60';
+    case 'expiring_this_month': return 'text-orange-700 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950/50 dark:border-orange-800/60';
+    case 'expired': return 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950/50 dark:border-red-800/60';
+    case 'renewed': return 'text-blue-700 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950/50 dark:border-blue-800/60';
   }
 }
 
