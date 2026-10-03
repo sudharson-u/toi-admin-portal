@@ -51,7 +51,7 @@ export default function CustomerNotesSection({
       setSavedNotes(notes);
       setSavedAt(data.updated_at || new Date().toISOString());
       setJustSaved(true);
-      setTimeout(() => setJustSaved(false), 3000);
+      setTimeout(() => setJustSaved(false), 3500);
     } catch (err: any) {
       setError(err.message || 'Error saving notes');
     } finally {
@@ -69,7 +69,7 @@ export default function CustomerNotesSection({
   }
 
   return (
-    <div className="card p-5 border border-slate-200/80 shadow-xs">
+    <div id="notes-section" className="card p-5 border border-slate-200/80 shadow-xs">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -78,10 +78,10 @@ export default function CustomerNotesSection({
           </div>
           <div>
             <h2 className="text-xs font-bold uppercase tracking-wider text-gray-800">
-              Customer Notes & Instructions
+              Customer Notes
             </h2>
             <p className="text-[11px] text-gray-400">
-              Delivery preferences, payment records & special remarks
+              Type any remarks or instructions regarding this customer and click save
             </p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function CustomerNotesSection({
           </span>
         ) : justSaved ? (
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-            <Check className="w-3 h-3" /> Saved
+            <Check className="w-3 h-3" /> Saved!
           </span>
         ) : savedAt ? (
           <span className="text-[10px] text-gray-400 flex items-center gap-1">
@@ -106,9 +106,10 @@ export default function CustomerNotesSection({
       {/* Text Area */}
       <div className="relative">
         <textarea
+          id="customer-notes-input"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Type any notes regarding this customer here... (e.g. cheque number, delivery slot, alternate phone, house landmark, renewal feedback)"
+          placeholder="Type notes regarding this customer here... (e.g. payment mode, delivery preferences, alternate phone, house landmark, renewal feedback)"
           rows={4}
           className="w-full p-3 text-sm text-gray-800 placeholder:text-gray-400 bg-slate-50/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:bg-white transition-all resize-y min-h-[96px]"
         />
@@ -140,19 +141,32 @@ export default function CustomerNotesSection({
         </div>
       )}
 
+      {justSaved && (
+        <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 flex items-center gap-1.5">
+          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+          <span>Notes saved successfully for this customer!</span>
+        </div>
+      )}
+
       {/* Action Footer */}
       <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100">
         <span className="text-[11px] text-gray-400">
           {notes.length} characters
         </span>
         <button
+          id="save-notes-btn"
+          type="button"
           onClick={handleSave}
-          disabled={saving || !hasUnsavedChanges}
+          disabled={saving}
           className={cn(
-            'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold shadow-xs transition-all duration-150',
-            hasUnsavedChanges
-              ? 'bg-red-600 hover:bg-red-500 text-white cursor-pointer hover:shadow-md'
-              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+            'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer',
+            saving
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              : justSaved
+              ? 'bg-emerald-600 text-white'
+              : hasUnsavedChanges
+              ? 'bg-red-600 hover:bg-red-500 text-white hover:shadow-md'
+              : 'bg-red-600/90 hover:bg-red-600 text-white'
           )}
         >
           {saving ? (

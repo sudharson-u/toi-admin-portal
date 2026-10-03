@@ -79,7 +79,7 @@ export default function Header({ user }: HeaderProps) {
   const greeting = () => {
     const hour = new Date().getHours();
     const prefix = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
-    return `${prefix}, Umpathy`;
+    return `${prefix}, Umapathy`;
   };
 
   return (
@@ -170,7 +170,7 @@ export default function Header({ user }: HeaderProps) {
               U
             </div>
             <span className="hidden sm:inline text-sm font-semibold text-gray-800 max-w-[120px] truncate">
-              Umpathy
+              Umapathy
             </span>
             <ChevronDown className={cn('w-3.5 h-3.5 text-gray-400 transition-transform', showUserMenu && 'rotate-180')} />
           </button>
@@ -180,7 +180,7 @@ export default function Header({ user }: HeaderProps) {
               <div className="fixed inset-0 z-10" onClick={() => setShowUserMenu(false)} />
               <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-lg z-20 py-1 overflow-hidden fade-in">
                 <div className="px-3 py-2 border-b border-gray-50">
-                  <p className="text-xs font-bold text-gray-900">Umpathy</p>
+                  <p className="text-xs font-bold text-gray-900">Umapathy</p>
                   <p className="text-xs text-gray-500 truncate">{user.email}</p>
                   <span className="inline-block mt-1 px-1.5 py-0.5 bg-red-50 text-red-700 text-[10px] font-medium rounded">
                     Circulation Head • Admin

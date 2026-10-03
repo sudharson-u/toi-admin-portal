@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(224, 231, 255);
-  doc.text('Subscription & Circulation Management • Circulation Head: Umpathy', 14, 18);
+  doc.text('Subscription & Circulation Management • Circulation Head: Umapathy', 14, 18);
 
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);

@@ -62,7 +62,7 @@ export default function Sidebar() {
           {!collapsed && (
             <div className="min-w-0">
               <p className="text-xs font-black tracking-wider text-slate-900 leading-tight">THE TIMES OF INDIA</p>
-              <p className="text-xs text-red-600 font-semibold leading-tight truncate">Admin: Umpathy</p>
+              <p className="text-xs text-red-600 font-semibold leading-tight truncate">Admin: Umapathy</p>
             </div>
           )}
           {/* Mobile close */}

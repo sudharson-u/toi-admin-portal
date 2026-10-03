@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
-import { getMockCustomers, getMockCustomerById } from '@/lib/mockData';
+import { getMockCustomers, getMockCustomerById, deleteMockCustomer } from '@/lib/mockData';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -109,9 +109,21 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const configured = isSupabaseConfigured();
+
+  if (!configured) {
+    const deleted = deleteMockCustomer(id);
+    if (!deleted) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    return NextResponse.json({ success: true });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  // Delete subscriptions and audit logs first to prevent foreign key constraint issues
+  await supabase.from('subscriptions').delete().eq('customer_id', id);
+  await supabase.from('audit_logs').delete().eq('customer_id', id);
 
   const { error } = await supabase.from('customers').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

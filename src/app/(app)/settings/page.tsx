@@ -21,13 +21,13 @@ export default function SettingsPage() {
             <div>
               <h2 className="text-base font-bold text-gray-900">THE TIMES OF INDIA</h2>
               <p className="text-xs text-gray-500">Circulation & Customer Portal</p>
-              <p className="text-xs text-red-600 font-semibold mt-0.5">Main Administrator: Umpathy</p>
+              <p className="text-xs text-red-600 font-semibold mt-0.5">Main Administrator: Umapathy</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-xs text-gray-400">Head of Circulation</p>
-              <p className="font-semibold text-gray-800">Umpathy</p>
+              <p className="font-semibold text-gray-800">Umapathy</p>
             </div>
             <div>
               <p className="text-xs text-gray-400">Database</p>

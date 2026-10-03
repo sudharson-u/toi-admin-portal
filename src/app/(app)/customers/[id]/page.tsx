@@ -3,12 +3,14 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft, Phone, MapPin, Hash, Calendar, Clock, RefreshCw,
-  Edit, CheckCircle, AlertTriangle, XCircle, Activity, FileText
+  Edit, CheckCircle, AlertTriangle, XCircle, Activity, FileText, Share2, StickyNote, Trash2
 } from 'lucide-react';
 import { formatDate, calculateStatus, calculateDaysRemaining, calculateNotificationDate, getStatusLabel, getStatusColor, cn } from '@/lib/utils';
 import { parseISO } from 'date-fns';
 import CustomerActions from '@/components/customers/CustomerActions';
 import CustomerNotesSection from '@/components/customers/CustomerNotesSection';
+import CustomerShareSection from '@/components/customers/CustomerShareSection';
+import CustomerDeleteSection from '@/components/customers/CustomerDeleteSection';
 import { getMockCustomers } from '@/lib/mockData';
 
 async function getCustomer(id: string) {
@@ -149,7 +151,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
               <Edit className="w-4 h-4" />
               Edit
             </Link>
-            <CustomerActions customerId={id} currentSub={currentSub} />
+            <CustomerActions customerId={id} customer={customer} currentSub={currentSub} />
           </div>
         </div>
       </div>
@@ -268,6 +270,12 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             lastUpdated={noteUpdatedAt}
           />
 
+          {/* Share Customer Details Section */}
+          <CustomerShareSection
+            customer={customer}
+            currentSub={currentSub}
+          />
+
           {/* Subscription History */}
           {historicalSubs.length > 0 && (
             <div className="card p-5">
@@ -298,6 +306,14 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
               </div>
             </div>
           )}
+
+          {/* Delete Customer Section */}
+          <CustomerDeleteSection
+            customerId={customer.id}
+            customerName={customer.customer_name}
+            orderId={customer.order_id}
+            phoneNumber={customer.mobile_number}
+          />
         </div>
 
         {/* Right column: Quick info + Audit */}
@@ -310,10 +326,18 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                 className="flex items-center gap-2 p-2.5 rounded-lg hover:bg-blue-50 text-gray-600 hover:text-blue-700 transition-colors text-sm font-medium">
                 <Edit className="w-4 h-4" /> Edit Customer
               </Link>
+              <a href="#share-section"
+                className="flex items-center gap-2 p-2.5 rounded-lg hover:bg-emerald-50 text-gray-600 hover:text-emerald-700 transition-colors text-sm font-medium">
+                <Share2 className="w-4 h-4 text-emerald-600" /> Share Details
+              </a>
+              <a href="#notes-section"
+                className="flex items-center gap-2 p-2.5 rounded-lg hover:bg-amber-50 text-gray-600 hover:text-amber-700 transition-colors text-sm font-medium">
+                <StickyNote className="w-4 h-4 text-amber-600" /> Add / View Notes
+              </a>
               {customer.mobile_number && (
                 <a href={`tel:+91${customer.mobile_number}`}
                   className="flex items-center gap-2 p-2.5 rounded-lg hover:bg-green-50 text-gray-600 hover:text-green-700 transition-colors text-sm font-medium">
-                  <Phone className="w-4 h-4" /> Call Customer
+                  <Phone className="w-4 h-4 text-green-600" /> Call Customer
                 </a>
               )}
               <Link href={`/reports`}

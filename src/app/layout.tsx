@@ -3,7 +3,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'The Times of India • Circulation & Subscriptions',
-  description: 'Times of India Customer Subscription & Renewal Reminder System — Circulation Head: Umpathy',
+  description: 'Times of India Customer Subscription & Renewal Reminder System — Circulation Head: Umapathy',
   manifest: '/manifest.json',
   icons: {
     icon: '/logo.png',
@@ -30,7 +30,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="TOI Portal - Umpathy" />
+        <meta name="apple-mobile-web-app-title" content="TOI Portal - Umapathy" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

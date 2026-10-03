@@ -187,3 +187,11 @@ export function renewMockSubscription(customerId: string, newEndDate: string, ne
 
   return true;
 }
+
+export function deleteMockCustomer(customerId: string): boolean {
+  const all = getMockCustomers();
+  const index = all.findIndex(c => c.id === customerId || c.customer_id === customerId);
+  if (index === -1) return false;
+  all.splice(index, 1);
+  return true;
+}

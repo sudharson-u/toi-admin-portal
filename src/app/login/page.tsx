@@ -72,7 +72,7 @@ export default function LoginPage() {
             </div>
             <h1 className="text-2xl font-bold text-white mb-1 tracking-tight">THE TIMES OF INDIA</h1>
             <p className="text-sm text-slate-300 font-medium">Subscription & Circulation Portal</p>
-            <p className="text-xs text-red-400 font-semibold mt-1">Main Admin: Umpathy</p>
+            <p className="text-xs text-red-400 font-semibold mt-1">Main Admin: Umapathy</p>
           </div>
 
           {/* Form */}
