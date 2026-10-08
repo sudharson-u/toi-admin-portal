@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import * as XLSX from 'xlsx';
-import { parseExcelDate, sanitizePhone } from '@/lib/utils';
+import { parseExcelDate, sanitizePhone, formatOrderId } from '@/lib/utils';
 
 const COLUMN_MAPS: Record<string, string[]> = {
   serial_number: ['serial number', 'sr', 'sr.no', 's.no', 'sno', 'serial', '#'],
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       customer_name: customerName,
       address: String(get('address') || '').trim(),
       mobile_number: mobile,
-      order_id: String(get('order_id') || '').trim(),
+      order_id: formatOrderId(String(get('order_id') || '')),
       start_date: startDate || '',
       end_date: endDate || '',
       valid: errors.length === 0,

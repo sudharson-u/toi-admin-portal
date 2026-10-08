@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import { getMockCustomers, getMockCustomerById, deleteMockCustomer } from '@/lib/mockData';
+import { formatOrderId } from '@/lib/utils';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -51,6 +52,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const configured = isSupabaseConfigured();
   const body = await request.json();
   const { customer_id, customer_name, address, mobile_number, order_id, start_date, end_date } = body;
+  const cleanOrderId = order_id !== undefined ? formatOrderId(order_id) : undefined;
 
   // Instant response for mock/Excel customers
   if (!configured || id.startsWith('cust-')) {
@@ -60,7 +62,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     if (customer_name) cust.customer_name = customer_name;
     if (address !== undefined) cust.address = address;
     if (mobile_number !== undefined) cust.mobile_number = mobile_number;
-    if (order_id !== undefined) cust.order_id = order_id;
+    if (cleanOrderId !== undefined) cust.order_id = cleanOrderId;
     if (start_date && cust.subscriptions[0]) cust.subscriptions[0].start_date = start_date;
     if (end_date && cust.subscriptions[0]) cust.subscriptions[0].end_date = end_date;
     return NextResponse.json({ success: true, customer: cust });
@@ -71,7 +73,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     const customerRes = await supabase
       .from('customers')
-      .update({ customer_id, customer_name, address, mobile_number, order_id })
+      .update({
+        customer_id,
+        customer_name,
+        address,
+        mobile_number,
+        ...(cleanOrderId !== undefined ? { order_id: cleanOrderId } : {}),
+      })
       .eq('id', id);
 
     if (customerRes.error) {

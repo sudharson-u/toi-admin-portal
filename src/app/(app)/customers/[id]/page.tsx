@@ -5,7 +5,7 @@ import {
   ArrowLeft, Phone, MapPin, Hash, Calendar, Clock, RefreshCw,
   Edit, CheckCircle, AlertTriangle, XCircle, Activity, FileText, Share2, StickyNote, Trash2
 } from 'lucide-react';
-import { formatDate, calculateStatus, calculateDaysRemaining, calculateNotificationDate, getStatusLabel, getStatusColor, cn } from '@/lib/utils';
+import { formatDate, calculateStatus, calculateDaysRemaining, calculateNotificationDate, getStatusLabel, getStatusColor, formatOrderId, cn } from '@/lib/utils';
 import { parseISO } from 'date-fns';
 import CustomerActions from '@/components/customers/CustomerActions';
 import CustomerNotesSection from '@/components/customers/CustomerNotesSection';
@@ -238,7 +238,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                     <p className="text-xs text-gray-400 mb-1">Order ID</p>
                     <div className="flex items-center gap-1.5">
                       <Hash className="w-3.5 h-3.5 text-gray-400" />
-                      <p className="text-sm font-mono font-medium text-gray-800">{customer.order_id || '—'}</p>
+                      <p className="text-sm font-mono font-medium text-gray-800">{formatOrderId(customer.order_id) || '—'}</p>
                     </div>
                   </div>
                   <div>

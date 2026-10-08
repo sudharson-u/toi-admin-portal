@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { X, Loader2, User, Phone, MapPin, Hash, Calendar } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatOrderId } from '@/lib/utils';
 
 interface AddCustomerDialogProps {
   onClose: () => void;
@@ -39,7 +39,10 @@ export default function AddCustomerDialog({ onClose, onSuccess }: AddCustomerDia
       const res = await fetch('/api/customers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          order_id: formatOrderId(form.order_id),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -124,7 +127,7 @@ export default function AddCustomerDialog({ onClose, onSuccess }: AddCustomerDia
                 name="order_id"
                 value={form.order_id}
                 onChange={handleChange}
-                placeholder="e.g. SCT 39044638"
+                placeholder="e.g. SCT39044638, SCF56177043"
                 className="form-input"
               />
             </div>

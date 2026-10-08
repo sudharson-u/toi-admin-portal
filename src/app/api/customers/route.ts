@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
-import { calculateStatus, calculateNotificationDate } from '@/lib/utils';
+import { calculateStatus, calculateNotificationDate, formatOrderId } from '@/lib/utils';
 import { format, startOfMonth, endOfMonth, addMonths, parseISO, isBefore, isAfter } from 'date-fns';
 import { getMockCustomers, addMockCustomer } from '@/lib/mockData';
 
@@ -186,6 +186,7 @@ export async function POST(request: NextRequest) {
   const configured = isSupabaseConfigured();
   const body = await request.json();
   const { customer_id, customer_name, address, mobile_number, order_id, start_date, end_date } = body;
+  const cleanOrderId = formatOrderId(order_id);
 
   if (!customer_id || !customer_name || !start_date || !end_date) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -197,7 +198,7 @@ export async function POST(request: NextRequest) {
       customer_name,
       address,
       mobile_number,
-      order_id,
+      order_id: cleanOrderId,
       start_date,
       end_date,
     });
@@ -222,7 +223,7 @@ export async function POST(request: NextRequest) {
   // Insert customer
   const { data: customer, error: customerError } = await supabase
     .from('customers')
-    .insert({ customer_id, customer_name, address, mobile_number, order_id })
+    .insert({ customer_id, customer_name, address, mobile_number, order_id: cleanOrderId })
     .select()
     .single();
 

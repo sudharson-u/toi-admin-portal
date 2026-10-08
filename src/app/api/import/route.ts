@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import * as XLSX from 'xlsx';
-import { parseExcelDate, sanitizePhone } from '@/lib/utils';
+import { parseExcelDate, sanitizePhone, formatOrderId } from '@/lib/utils';
 import { addMockCustomer } from '@/lib/mockData';
 
 // Column name mappings (case-insensitive)
@@ -67,7 +67,7 @@ function parseRows(sheet: XLSX.WorkSheet) {
       customer_name: customerName,
       address: String(get('address') || '').trim(),
       mobile_number: mobile,
-      order_id: String(get('order_id') || '').trim(),
+      order_id: formatOrderId(String(get('order_id') || '')),
       start_date: startDate || '',
       end_date: endDate || '',
       valid: errors.length === 0,

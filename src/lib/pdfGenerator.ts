@@ -1,6 +1,7 @@
 import { jsPDF } from 'jspdf';
 import at from 'jspdf-autotable';
 import { format, parseISO } from 'date-fns';
+import { formatOrderId } from './utils';
 
 const autoTable = typeof at === 'function' ? at : (at as any).default || at;
 
@@ -40,28 +41,26 @@ export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?:
   const now = new Date();
 
   // Table Data Preparation
-  const tableData = customers.map((c, index) => {
+  const tableData = customers.map((c) => {
     const sub = c.subscriptions?.find(s => s.is_current) || c.subscriptions?.[0];
     const sDate = formatDateSafe(sub?.start_date);
     const eDate = formatDateSafe(sub?.end_date);
-    const custId = c.customer_id && !c.customer_id.startsWith('TOI-') ? c.customer_id : '—';
+    const orderId = formatOrderId(c.order_id) || '—';
 
     return [
-      String(index + 1),
-      custId,
+      orderId,
       c.customer_name || '—',
       c.address || '—',
       c.mobile_number || '—',
-      c.order_id || '—',
       sDate,
       eDate,
     ];
   });
 
-  // Table directly at the top with exact column structure and styling from screenshot
+  // Table directly at the top with columns: Order ID, Customer Name, Address, Mobile Number, Start Date, End Date
   autoTable(doc, {
-    head: [['#', 'Customer ID', 'Customer Name', 'Complete Address', 'Mobile Number', 'Order ID', 'Start Date', 'End Date']],
-    body: tableData.length > 0 ? tableData : [['—', '—', 'No records found', '—', '—', '—', '—', '—']],
+    head: [['Order ID', 'Customer Name', 'Address', 'Mobile Number', 'Start Date', 'End Date']],
+    body: tableData.length > 0 ? tableData : [['—', 'No records found', '—', '—', '—', '—']],
     startY: 8,
     margin: { left: 8, right: 8, top: 8, bottom: 12 },
     styles: {
@@ -73,7 +72,7 @@ export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?:
       overflow: 'linebreak', // Full wrapping for address and details without clipping
     },
     headStyles: {
-      fillColor: [30, 58, 138], // #1E3A8A Navy Blue matching screenshot
+      fillColor: [30, 58, 138], // #1E3A8A Navy Blue
       textColor: [255, 255, 255],
       fontStyle: 'bold',
       fontSize: 7.5,
@@ -83,14 +82,12 @@ export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?:
       fillColor: [255, 255, 255],
     },
     columnStyles: {
-      0: { cellWidth: 7, halign: 'center' }, // #
-      1: { cellWidth: 19, fontStyle: 'bold' }, // Customer ID (bold matching screenshot)
-      2: { cellWidth: 28 }, // Customer Name
-      3: { cellWidth: 54 }, // Complete Address (full wrap)
-      4: { cellWidth: 21 }, // Mobile Number
-      5: { cellWidth: 25 }, // Order ID
-      6: { cellWidth: 20, halign: 'center' }, // Start Date on a single line
-      7: { cellWidth: 20, halign: 'center' }, // End Date on a single line
+      0: { cellWidth: 26, fontStyle: 'bold' }, // Order ID
+      1: { cellWidth: 32 }, // Customer Name
+      2: { cellWidth: 72 }, // Address (full wrap)
+      3: { cellWidth: 23 }, // Mobile Number
+      4: { cellWidth: 20.5, halign: 'center' }, // Start Date
+      5: { cellWidth: 20.5, halign: 'center' }, // End Date
     },
     didDrawPage: (data: any) => {
       const pageCount = (doc as any).internal.getNumberOfPages();

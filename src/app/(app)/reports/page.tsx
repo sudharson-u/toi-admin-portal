@@ -195,11 +195,11 @@ export default function ReportsPage() {
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span>Customer ID, Name, Address</span>
+                <span>Order ID, Customer Name, Address</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                <span>Mobile, Order ID</span>
+                <span>Mobile Number, Start &amp; End dates</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />

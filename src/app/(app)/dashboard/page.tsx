@@ -1,5 +1,5 @@
 import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
-import { formatDate, calculateStatus, calculateDaysRemaining, getStatusLabel, getStatusColor } from '@/lib/utils';
+import { formatDate, calculateStatus, calculateDaysRemaining, getStatusLabel, getStatusColor, formatOrderId } from '@/lib/utils';
 import {
   Users, CheckCircle, Clock, AlertTriangle, XCircle, RefreshCw,
   TrendingUp, ArrowRight, Phone
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
                             {customer.mobile_number}
                           </a>
                         </td>
-                        <td className="text-xs text-gray-500 font-mono">{customer.order_id}</td>
+                        <td className="text-xs text-gray-500 font-mono">{formatOrderId(customer.order_id) || '—'}</td>
                         <td className="font-medium text-gray-800 whitespace-nowrap">{formatDate(sub.end_date)}</td>
                         <td>
                           <span className={cn(

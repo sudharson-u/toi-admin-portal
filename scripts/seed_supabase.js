@@ -58,7 +58,7 @@ async function runSeed() {
     const customerName = (r['Customer Name'] || 'Unknown').trim();
     const address = (r['Customer Address'] || '').trim();
     const mobileNumber = (r['Phone Number'] || '').trim();
-    const orderId = (r['Order ID'] || '').trim();
+    const orderId = (r['Order ID'] || '').replace(/[_\s]+/g, '').trim();
     const startDate = parseDateString(r['Start Date']) || '2025-01-01';
     const endDate = parseDateString(r['End Date']) || '2026-12-31';
 

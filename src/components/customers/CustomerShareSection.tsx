@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Share2, Copy, Check, MessageSquare, ExternalLink, Calendar, MapPin, Phone, Hash, User } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatOrderId } from '@/lib/utils';
 
 interface CustomerShareSectionProps {
   customer: {
@@ -23,7 +23,7 @@ export default function CustomerShareSection({ customer, currentSub }: CustomerS
   const [copied, setCopied] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
-  const orderId = customer.order_id || '';
+  const orderId = formatOrderId(customer.order_id);
   const customerName = customer.customer_name || '';
   const customerAddress = customer.address || '';
   const phoneNumber = customer.mobile_number || '';

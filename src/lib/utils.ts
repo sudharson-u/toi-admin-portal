@@ -163,3 +163,13 @@ export function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay
     timer = setTimeout(() => fn(...args), delay);
   };
 }
+
+/**
+ * Normalizes Order ID to AnyTextNumber format (e.g. SCT39044638, SCF56177043, TS5485626A).
+ * Removes spaces and underscores between text and numbers while strictly preserving the text and numbers.
+ */
+export function formatOrderId(orderId?: string | null): string {
+  if (!orderId) return '';
+  return orderId.replace(/[_\s]+/g, '').trim();
+}
+

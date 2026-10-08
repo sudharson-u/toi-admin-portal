@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import * as XLSX from 'xlsx';
 import { format, parseISO } from 'date-fns';
-import { calculateNotificationDate, calculateStatus } from './utils';
+import { calculateNotificationDate, calculateStatus, formatOrderId } from './utils';
 
 export interface MockSubscription {
   id: string;
@@ -87,7 +87,7 @@ export function loadCustomersFromExcel(): MockCustomer[] {
         customer_name: (r['Customer Name'] || 'Unknown').trim(),
         address: (r['Customer Address'] || '').trim(),
         mobile_number: (r['Phone Number'] || '').trim(),
-        order_id: (r['Order ID'] || '').trim(),
+        order_id: formatOrderId(r['Order ID']),
         notes,
         created_at: `${startDate}T00:00:00Z`,
         updated_at: `${startDate}T00:00:00Z`,
@@ -143,7 +143,7 @@ export function addMockCustomer(newCust: {
     customer_name: newCust.customer_name,
     address: newCust.address || '',
     mobile_number: newCust.mobile_number || '',
-    order_id: newCust.order_id || `TOI-${serial}`,
+    order_id: formatOrderId(newCust.order_id),
     notes: newCust.notes || '',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),

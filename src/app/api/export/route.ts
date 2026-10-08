@@ -3,6 +3,7 @@ import { createClient, isSupabaseConfigured } from '@/lib/supabase/server';
 import * as XLSX from 'xlsx';
 import { format, parseISO } from 'date-fns';
 import { getMockCustomers } from '@/lib/mockData';
+import { formatOrderId } from '@/lib/utils';
 
 function formatExcelDate(dateStr: string | null | undefined): string {
   if (!dateStr) return '';
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
         'Customer Name': c.customer_name || '',
         'Address': c.address || '',
         'Mobile Number': c.mobile_number || '',
-        'Order ID': c.order_id || '',
+        'Order ID': formatOrderId(c.order_id) || '',
         'Start Date': formatExcelDate(sub?.start_date),
         'End Date': formatExcelDate(sub?.end_date),
         'Notes': c.notes || '',
@@ -64,7 +65,7 @@ export async function GET(request: NextRequest) {
           'Customer Name': c.customer_name || '',
           'Address': c.address || '',
           'Mobile Number': c.mobile_number || '',
-          'Order ID': c.order_id || '',
+          'Order ID': formatOrderId(c.order_id) || '',
           'Start Date': formatExcelDate(sub?.start_date),
           'End Date': formatExcelDate(sub?.end_date),
         };
@@ -90,7 +91,7 @@ export async function GET(request: NextRequest) {
             'Customer Name': c.customer_name || '',
             'Address': c.address || '',
             'Mobile Number': c.mobile_number || '',
-            'Order ID': c.order_id || '',
+            'Order ID': formatOrderId(c.order_id) || '',
             'Start Date': formatExcelDate(s.start_date),
             'End Date': formatExcelDate(s.end_date),
             'Status': s.status || '',

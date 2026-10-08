@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Filter, Plus, Phone, ArrowUpDown, ChevronLeft, ChevronRight, X, Download, MapPin, CheckSquare, Square, FileText } from 'lucide-react';
-import { formatDate, calculateStatus, calculateDaysRemaining, getStatusLabel, getStatusColor, cn } from '@/lib/utils';
+import { formatDate, calculateStatus, calculateDaysRemaining, getStatusLabel, getStatusColor, formatOrderId, cn } from '@/lib/utils';
 import { SubscriptionStatus } from '@/lib/types';
 import AddCustomerDialog from '@/components/customers/AddCustomerDialog';
 import { generateCustomersPDF } from '@/lib/pdfGenerator';
@@ -411,7 +411,7 @@ export default function CustomersPage() {
                           </a>
                         </td>
 
-                        <td className="text-xs font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap">{customer.order_id}</td>
+                        <td className="text-xs font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap">{formatOrderId(customer.order_id) || '—'}</td>
                         <td className="text-sm font-mono text-gray-600 dark:text-gray-400 whitespace-nowrap">{sub ? formatDate(sub.start_date) : '—'}</td>
                         <td className="text-sm font-medium font-mono text-gray-800 dark:text-gray-200 whitespace-nowrap">{sub ? formatDate(sub.end_date) : '—'}</td>
 
@@ -510,7 +510,7 @@ export default function CustomersPage() {
                       </div>
                       <div>
                         <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Order ID</span>
-                        <p className="font-mono">{customer.order_id}</p>
+                        <p className="font-mono">{formatOrderId(customer.order_id) || '—'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Start</span>

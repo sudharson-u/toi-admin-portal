@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Loader2, Save, Hash, User, Phone, MapPin, Calendar } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, formatOrderId } from '@/lib/utils';
 
 interface CustomerData {
   id: string;
@@ -59,7 +59,7 @@ export default function EditCustomerPage() {
           customer_name: c.customer_name || '',
           address: c.address || '',
           mobile_number: c.mobile_number || '',
-          order_id: c.order_id || '',
+          order_id: formatOrderId(c.order_id) || '',
           start_date: currentSub?.start_date || '',
           end_date: currentSub?.end_date || '',
         });
@@ -91,7 +91,10 @@ export default function EditCustomerPage() {
       const res = await fetch(`/api/customers/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          order_id: formatOrderId(form.order_id),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -175,6 +178,7 @@ export default function EditCustomerPage() {
                   name="order_id"
                   value={form.order_id}
                   onChange={handleChange}
+                  placeholder="e.g. SCT39044638, SCF56177043"
                   className="form-input font-mono"
                 />
               </div>

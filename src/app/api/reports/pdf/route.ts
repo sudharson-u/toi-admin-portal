@@ -4,6 +4,7 @@ import { jsPDF } from 'jspdf';
 import at from 'jspdf-autotable';
 import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns';
 import { getMockCustomers } from '@/lib/mockData';
+import { formatOrderId } from '@/lib/utils';
 
 const autoTable = typeof at === 'function' ? at : (at as any).default || at;
 
@@ -122,26 +123,25 @@ export async function POST(request: NextRequest) {
   doc.text(monthLabel.toUpperCase(), 8, 9);
 
   // Table Data Preparation
-  const tableData = customers.map((c, index) => {
+  const tableData = customers.map((c) => {
     const sub = c.subscriptions?.find((s: { is_current: boolean }) => s.is_current) || c.subscriptions?.[0];
     const sDate = formatDateSafe(sub?.start_date);
     const eDate = formatDateSafe(sub?.end_date);
+    const orderId = formatOrderId(c.order_id) || '—';
 
     return [
-      String(index + 1),
-      c.customer_id && !c.customer_id.startsWith('TOI-') ? c.customer_id : '—',
+      orderId,
       c.customer_name || '—',
       c.address || '—',
       c.mobile_number || '—',
-      c.order_id || '—',
       sDate,
       eDate,
     ];
   });
 
   autoTable(doc, {
-    head: [['#', 'Customer ID', 'Customer Name', 'Complete Address', 'Mobile Number', 'Order ID', 'Start Date', 'End Date']],
-    body: tableData.length > 0 ? tableData : [['—', '—', 'No records found for this period', '—', '—', '—', '—', '—']],
+    head: [['Order ID', 'Customer Name', 'Address', 'Mobile Number', 'Start Date', 'End Date']],
+    body: tableData.length > 0 ? tableData : [['—', 'No records found for this period', '—', '—', '—', '—']],
     startY: 12,
     margin: { left: 8, right: 8, top: 12, bottom: 12 },
     styles: {
@@ -163,14 +163,12 @@ export async function POST(request: NextRequest) {
       fillColor: [255, 255, 255],
     },
     columnStyles: {
-      0: { cellWidth: 7, halign: 'center' }, // #
-      1: { cellWidth: 19, fontStyle: 'bold' }, // Customer ID
-      2: { cellWidth: 28 }, // Customer Name
-      3: { cellWidth: 54 }, // Complete Address (full wrap!)
-      4: { cellWidth: 21 }, // Mobile Number
-      5: { cellWidth: 25 }, // Order ID
-      6: { cellWidth: 20, halign: 'center' }, // Start Date on a single line
-      7: { cellWidth: 20, halign: 'center' }, // End Date on a single line
+      0: { cellWidth: 26, fontStyle: 'bold' }, // Order ID
+      1: { cellWidth: 32 }, // Customer Name
+      2: { cellWidth: 72 }, // Address (full wrap!)
+      3: { cellWidth: 23 }, // Mobile Number
+      4: { cellWidth: 20.5, halign: 'center' }, // Start Date
+      5: { cellWidth: 20.5, halign: 'center' }, // End Date
     },
     didDrawPage: (data: any) => {
       const pageCount = (doc as any).internal.getNumberOfPages();

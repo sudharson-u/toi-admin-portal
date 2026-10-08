@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Share2, Copy, Check, MessageSquare, X, Hash, User, Phone, Calendar, MapPin } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatOrderId } from '@/lib/utils';
 
 interface ShareCustomerDialogProps {
   customer: {
@@ -24,7 +24,7 @@ export default function ShareCustomerDialog({ customer, currentSub, onClose }: S
   const [copied, setCopied] = useState(false);
   const [shareStatus, setShareStatus] = useState<string | null>(null);
 
-  const orderId = customer.order_id || '';
+  const orderId = formatOrderId(customer.order_id);
   const customerName = customer.customer_name || '';
   const customerAddress = customer.address || '';
   const phoneNumber = customer.mobile_number || '';

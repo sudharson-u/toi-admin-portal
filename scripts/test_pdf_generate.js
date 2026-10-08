@@ -89,19 +89,17 @@ doc.text('Report Period: December 2026', 18, 35.5);
 doc.text(`Total Records Found: ${dec2026.length}`, 105, 35.5);
 doc.text('Source: Master Circulation Database', 200, 35.5);
 
-const tableData = dec2026.map((c, index) => [
-  String(index + 1),
-  c.customerId,
+const tableData = dec2026.map((c) => [
+  (c.orderId || '').replace(/[_\s]+/g, '').trim(),
   c.customerName,
   c.address,
   c.mobileNumber,
-  c.orderId,
   c.startDate,
   c.endDate,
 ]);
 
 autoTable(doc, {
-  head: [['#', 'Customer ID', 'Customer Name', 'Complete Address', 'Mobile Number', 'Order ID', 'Start Date', 'End Date']],
+  head: [['Order ID', 'Customer Name', 'Address', 'Mobile Number', 'Start Date', 'End Date']],
   body: tableData,
   startY: 44,
   margin: { left: 14, right: 14, bottom: 16 },
@@ -124,14 +122,12 @@ autoTable(doc, {
     fillColor: [248, 250, 252],
   },
   columnStyles: {
-    0: { cellWidth: 10, halign: 'center' },
-    1: { cellWidth: 26, fontStyle: 'bold' },
-    2: { cellWidth: 38 },
-    3: { cellWidth: 95 },
-    4: { cellWidth: 26 },
-    5: { cellWidth: 30 },
-    6: { cellWidth: 22, halign: 'center' },
-    7: { cellWidth: 22, halign: 'center' },
+    0: { cellWidth: 32, fontStyle: 'bold' },
+    1: { cellWidth: 40 },
+    2: { cellWidth: 105 },
+    3: { cellWidth: 30 },
+    4: { cellWidth: 31, halign: 'center' },
+    5: { cellWidth: 31, halign: 'center' },
   },
   didDrawPage: (data) => {
     const pageCount = doc.internal.getNumberOfPages();
