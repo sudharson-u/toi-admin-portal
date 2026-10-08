@@ -14,64 +14,94 @@ import CustomerDeleteSection from '@/components/customers/CustomerDeleteSection'
 import { getMockCustomers } from '@/lib/mockData';
 
 async function getCustomer(id: string) {
-  if (!isSupabaseConfigured()) {
+  // If id is a mock ID or Supabase is not configured, load from memory instantly
+  if (!isSupabaseConfigured() || id.startsWith('cust-')) {
     const list = getMockCustomers();
     const found = list.find(c => c.id === id || c.customer_id === id);
+    if (found) {
+      return {
+        customer: found,
+        auditLogs: [
+          {
+            id: 'log-1',
+            action: 'customer_created',
+            created_at: found.created_at,
+            new_value: { customer_name: found.customer_name, customer_id: found.customer_id },
+          }
+        ],
+        note: found.notes || '',
+        noteUpdatedAt: found.updated_at || '',
+      };
+    }
+    if (!isSupabaseConfigured()) return null;
+  }
+
+  try {
+    const supabase = await createClient();
+
+    // Query customer, audit logs, and latest note concurrently to minimize roundtrips
+    const [custRes, logsRes, noteRes] = await Promise.all([
+      supabase
+        .from('customers')
+        .select(`
+          *,
+          subscriptions(id, start_date, end_date, status, is_current, notification_date, created_at, updated_at)
+        `)
+        .eq('id', id)
+        .maybeSingle(),
+      supabase
+        .from('audit_logs')
+        .select('*')
+        .eq('customer_id', id)
+        .order('created_at', { ascending: false })
+        .limit(5),
+      supabase
+        .from('audit_logs')
+        .select('new_value, created_at')
+        .eq('customer_id', id)
+        .eq('action', 'customer_note')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    let customer = custRes.data;
+
+    // Fallback to mock data if not found in remote DB
+    if (!customer) {
+      const list = getMockCustomers();
+      const found = list.find(c => c.id === id || c.customer_id === id);
+      if (!found) return null;
+      return {
+        customer: found,
+        auditLogs: logsRes.data || [],
+        note: found.notes || '',
+        noteUpdatedAt: found.updated_at || '',
+      };
+    }
+
+    // Sort: current first, then by start_date desc
+    customer.subscriptions = customer.subscriptions?.sort((a: { is_current: boolean; start_date: string }, b: { is_current: boolean; start_date: string }) => {
+      if (a.is_current) return -1;
+      if (b.is_current) return 1;
+      return b.start_date.localeCompare(a.start_date);
+    }) || [];
+
+    const note = noteRes.data?.new_value?.note || (customer as any)?.notes || '';
+    const noteUpdatedAt = noteRes.data?.created_at || (customer as any)?.updated_at || '';
+
+    return { customer, auditLogs: logsRes.data || [], note, noteUpdatedAt };
+  } catch (err) {
+    console.error('Error fetching customer:', err);
+    const found = getMockCustomers().find(c => c.id === id || c.customer_id === id);
     if (!found) return null;
     return {
       customer: found,
-      auditLogs: [
-        {
-          id: 'log-1',
-          action: 'customer_created',
-          created_at: found.created_at,
-          new_value: { customer_name: found.customer_name, customer_id: found.customer_id },
-        }
-      ]
+      auditLogs: [],
+      note: found.notes || '',
+      noteUpdatedAt: found.updated_at || '',
     };
   }
-
-  const supabase = await createClient();
-  const { data: customer, error } = await supabase
-    .from('customers')
-    .select(`
-      *,
-      subscriptions(id, start_date, end_date, status, is_current, notification_date, created_at, updated_at)
-    `)
-    .eq('id', id)
-    .single();
-
-  if (error || !customer) return null;
-
-  // Sort: current first, then by start_date desc
-  customer.subscriptions = customer.subscriptions?.sort((a: { is_current: boolean; start_date: string }, b: { is_current: boolean; start_date: string }) => {
-    if (a.is_current) return -1;
-    if (b.is_current) return 1;
-    return b.start_date.localeCompare(a.start_date);
-  }) || [];
-
-  // Fetch recent audit logs
-  const { data: auditLogs } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('customer_id', id)
-    .order('created_at', { ascending: false })
-    .limit(5);
-
-  // Fetch latest note
-  const { data: noteLog } = await supabase
-    .from('audit_logs')
-    .select('new_value, created_at')
-    .eq('customer_id', id)
-    .eq('action', 'customer_note')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const note = noteLog?.new_value?.note || (customer as any)?.notes || '';
-  const noteUpdatedAt = noteLog?.created_at || (customer as any)?.updated_at || '';
-
-  return { customer, auditLogs: auditLogs || [], note, noteUpdatedAt };
 }
 
 export default async function CustomerDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -131,12 +161,18 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             ) : (
               <p className="text-xs text-gray-400 italic">No Customer ID assigned</p>
             )}
+            {customer.address && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-start gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{customer.address}</span>
+              </p>
+            )}
             {daysRemaining !== null && (
               <p className={cn(
-                'text-sm font-medium mt-1',
-                daysRemaining < 0 ? 'text-red-600' :
-                daysRemaining <= 30 ? 'text-orange-600' :
-                daysRemaining <= 90 ? 'text-amber-600' : 'text-gray-600'
+                'text-sm font-medium mt-1.5 font-mono',
+                daysRemaining < 0 ? 'text-red-600 dark:text-red-400' :
+                  daysRemaining <= 30 ? 'text-orange-600 dark:text-orange-400' :
+                    daysRemaining <= 90 ? 'text-amber-600 dark:text-amber-400' : 'text-gray-600 dark:text-gray-400'
               )}>
                 {daysRemaining < 0
                   ? `Expired ${Math.abs(daysRemaining)} days ago`
@@ -145,12 +181,8 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
             )}
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-2 flex-shrink-0">
-            <Link href={`/customers/${id}/edit`} className="btn-secondary text-sm">
-              <Edit className="w-4 h-4" />
-              Edit
-            </Link>
+          {/* Actions - Perfectly Aligned Toolbar */}
+          <div className="flex-shrink-0">
             <CustomerActions customerId={id} customer={customer} currentSub={currentSub} />
           </div>
         </div>
@@ -232,8 +264,8 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                       <p className={cn(
                         'text-sm font-semibold',
                         status === 'expired' ? 'text-red-600' :
-                        status === 'expiring_this_month' ? 'text-orange-600' :
-                        status === 'renew_soon' ? 'text-amber-600' : 'text-gray-800'
+                          status === 'expiring_this_month' ? 'text-orange-600' :
+                            status === 'renew_soon' ? 'text-amber-600' : 'text-gray-800'
                       )}>
                         {formatDate(currentSub.end_date)}
                       </p>

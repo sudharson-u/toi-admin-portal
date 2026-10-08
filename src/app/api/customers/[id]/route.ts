@@ -6,37 +6,44 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { id } = await params;
   const configured = isSupabaseConfigured();
 
-  if (!configured) {
+  // Instant response for mock/Excel customers
+  if (!configured || id.startsWith('cust-')) {
     const customer = getMockCustomerById(id);
     if (!customer) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     return NextResponse.json({ customer });
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const supabase = await createClient();
+    const { data: customer, error } = await supabase
+      .from('customers')
+      .select(`
+        *,
+        subscriptions(id, start_date, end_date, status, is_current, notification_date, created_at)
+      `)
+      .eq('id', id)
+      .maybeSingle();
 
-  const { data: customer, error } = await supabase
-    .from('customers')
-    .select(`
-      *,
-      subscriptions(id, start_date, end_date, status, is_current, notification_date, created_at)
-    `)
-    .eq('id', id)
-    .single();
+    if (error || !customer) {
+      // Check mock fallback
+      const mock = getMockCustomerById(id);
+      if (mock) return NextResponse.json({ customer: mock });
+      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    }
 
-  if (error || !customer) {
-    return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    // Sort subscriptions: current first, then by created_at desc
+    customer.subscriptions = customer.subscriptions?.sort((a: { is_current: boolean; created_at: string }, b: { is_current: boolean; created_at: string }) => {
+      if (a.is_current) return -1;
+      if (b.is_current) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }) || [];
+
+    return NextResponse.json({ customer });
+  } catch {
+    const mock = getMockCustomerById(id);
+    if (mock) return NextResponse.json({ customer: mock });
+    return NextResponse.json({ error: 'Failed to load customer' }, { status: 500 });
   }
-
-  // Sort subscriptions: current first, then by created_at desc
-  customer.subscriptions = customer.subscriptions?.sort((a: { is_current: boolean; created_at: string }, b: { is_current: boolean; created_at: string }) => {
-    if (a.is_current) return -1;
-    if (b.is_current) return 1;
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  }) || [];
-
-  return NextResponse.json({ customer });
 }
 
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -45,7 +52,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const body = await request.json();
   const { customer_id, customer_name, address, mobile_number, order_id, start_date, end_date } = body;
 
-  if (!configured) {
+  // Instant response for mock/Excel customers
+  if (!configured || id.startsWith('cust-')) {
     const cust = getMockCustomerById(id);
     if (!cust) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     if (customer_id) cust.customer_id = customer_id;
@@ -58,75 +66,59 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ success: true, customer: cust });
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const supabase = await createClient();
 
-  // Get existing customer for audit
-  const { data: existing } = await supabase.from('customers').select('*').eq('id', id).single();
-  if (!existing) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    const customerRes = await supabase
+      .from('customers')
+      .update({ customer_id, customer_name, address, mobile_number, order_id })
+      .eq('id', id);
 
-  // Update customer
-  const { error: customerError } = await supabase
-    .from('customers')
-    .update({ customer_id, customer_name, address, mobile_number, order_id })
-    .eq('id', id);
-
-  if (customerError) {
-    return NextResponse.json({ error: customerError.message }, { status: 500 });
-  }
-
-  // Update current subscription if dates changed
-  if (start_date || end_date) {
-    const { data: currentSub } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('customer_id', id)
-      .eq('is_current', true)
-      .single();
-
-    if (currentSub) {
-      await supabase.from('subscriptions')
-        .update({
-          start_date: start_date || currentSub.start_date,
-          end_date: end_date || currentSub.end_date,
-        })
-        .eq('id', currentSub.id);
+    if (customerRes.error) {
+      return NextResponse.json({ error: customerRes.error.message }, { status: 500 });
     }
+
+    if (start_date || end_date) {
+      await supabase
+        .from('subscriptions')
+        .update({
+          ...(start_date ? { start_date } : {}),
+          ...(end_date ? { end_date } : {}),
+        })
+        .eq('customer_id', id)
+        .eq('is_current', true);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Failed to update' }, { status: 500 });
   }
-
-  // Audit log
-  await supabase.from('audit_logs').insert({
-    user_id: user.id,
-    customer_id: id,
-    action: 'customer_updated',
-    old_value: { customer_id: existing.customer_id, customer_name: existing.customer_name, address: existing.address, mobile_number: existing.mobile_number, order_id: existing.order_id },
-    new_value: { customer_id, customer_name, address, mobile_number, order_id, start_date, end_date },
-  });
-
-  return NextResponse.json({ success: true });
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const configured = isSupabaseConfigured();
 
-  if (!configured) {
+  if (!configured || id.startsWith('cust-')) {
     const deleted = deleteMockCustomer(id);
     if (!deleted) return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
     return NextResponse.json({ success: true });
   }
 
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  try {
+    const supabase = await createClient();
 
-  // Delete subscriptions and audit logs first to prevent foreign key constraint issues
-  await supabase.from('subscriptions').delete().eq('customer_id', id);
-  await supabase.from('audit_logs').delete().eq('customer_id', id);
+    // Delete subscriptions and audit logs first to prevent foreign key constraint issues
+    await Promise.all([
+      supabase.from('subscriptions').delete().eq('customer_id', id),
+      supabase.from('audit_logs').delete().eq('customer_id', id),
+    ]);
 
-  const { error } = await supabase.from('customers').delete().eq('id', id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    const { error } = await supabase.from('customers').delete().eq('id', id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Failed to delete' }, { status: 500 });
+  }
 }

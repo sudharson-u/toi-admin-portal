@@ -101,7 +101,10 @@ export default function EditCustomerPage() {
       }
       setSuccess('Changes saved successfully!');
       setSaving(false);
-      setTimeout(() => router.push(`/customers/${id}`), 1200);
+      setTimeout(() => {
+        router.push(`/customers/${id}`);
+        router.refresh();
+      }, 400);
     } catch {
       setError('Network error. Please try again.');
       setSaving(false);

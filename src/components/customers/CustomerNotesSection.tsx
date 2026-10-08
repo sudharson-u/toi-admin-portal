@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { StickyNote, Save, Check, Loader2, Clock, Sparkles } from 'lucide-react';
+import { StickyNote, Save, Check, Loader2, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -10,17 +10,6 @@ interface CustomerNotesSectionProps {
   initialNotes: string;
   lastUpdated?: string;
 }
-
-const QUICK_TAGS = [
-  'Cheque payment received',
-  'Cash payment collected',
-  'Morning 6:00 AM delivery requested',
-  'Leave newspaper at security gate',
-  'Door lock / verify address',
-  'Call before delivery',
-  'Special Sunday edition requested',
-  'VIP customer',
-];
 
 export default function CustomerNotesSection({
   customerId,
@@ -59,98 +48,69 @@ export default function CustomerNotesSection({
     }
   }
 
-  function appendTag(tag: string) {
-    setNotes(prev => {
-      const trimmed = prev.trim();
-      if (!trimmed) return tag;
-      if (trimmed.includes(tag)) return prev;
-      return `${trimmed}\n• ${tag}`;
-    });
-  }
-
   return (
-    <div id="notes-section" className="card p-5 border border-slate-200/80 shadow-xs">
+    <div id="notes-section" className="card p-5 border border-gray-200 dark:border-[#222E45]">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
             <StickyNote className="w-4 h-4" />
           </div>
           <div>
-            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-800">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-gray-900 dark:text-gray-100">
               Customer Notes
             </h2>
-            <p className="text-[11px] text-gray-400">
-              Type any remarks or instructions regarding this customer and click save
+            <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              Internal notes and circulation remarks
             </p>
           </div>
         </div>
 
         {/* Status Pill */}
         {hasUnsavedChanges ? (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 animate-pulse">
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 animate-pulse">
             Unsaved Changes
           </span>
         ) : justSaved ? (
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-            <Check className="w-3 h-3" /> Saved!
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+            <Check className="w-3 h-3" /> Saved
           </span>
         ) : savedAt ? (
-          <span className="text-[10px] text-gray-400 flex items-center gap-1">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 font-mono flex items-center gap-1">
             <Clock className="w-3 h-3" />
             {format(new Date(savedAt), 'dd MMM yyyy, hh:mm a')}
           </span>
         ) : null}
       </div>
 
-      {/* Text Area */}
+      {/* Text Area without default placeholder */}
       <div className="relative">
         <textarea
           id="customer-notes-input"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          placeholder="Type notes regarding this customer here... (e.g. payment mode, delivery preferences, alternate phone, house landmark, renewal feedback)"
+          placeholder=""
           rows={4}
-          className="w-full p-3 text-sm text-gray-800 placeholder:text-gray-400 bg-slate-50/70 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 focus:bg-white transition-all resize-y min-h-[96px]"
+          className="form-input text-sm resize-y min-h-[110px]"
         />
       </div>
 
-      {/* Quick Tags */}
-      <div className="mt-2.5">
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <Sparkles className="w-3 h-3 text-amber-600" />
-          <span className="text-[10px] font-semibold uppercase text-gray-500 tracking-wider">Quick Suggestions</span>
-        </div>
-        <div className="flex flex-wrap gap-1.5">
-          {QUICK_TAGS.map(tag => (
-            <button
-              key={tag}
-              type="button"
-              onClick={() => appendTag(tag)}
-              className="text-[11px] px-2.5 py-1 rounded-lg bg-gray-100/80 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-200 border border-gray-200 text-gray-600 transition-colors"
-            >
-              + {tag}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {error && (
-        <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-600">
+        <div className="mt-2.5 p-2 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/60 rounded-lg text-xs text-red-600 dark:text-red-400">
           {error}
         </div>
       )}
 
       {justSaved && (
-        <div className="mt-2 p-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 flex items-center gap-1.5">
-          <Check className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+        <div className="mt-2.5 p-2 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 rounded-lg text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+          <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
           <span>Notes saved successfully for this customer!</span>
         </div>
       )}
 
       {/* Action Footer */}
-      <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100">
-        <span className="text-[11px] text-gray-400">
+      <div className="mt-4 flex items-center justify-between pt-3 border-t border-gray-100 dark:border-[#222E45]">
+        <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">
           {notes.length} characters
         </span>
         <button
@@ -159,25 +119,20 @@ export default function CustomerNotesSection({
           onClick={handleSave}
           disabled={saving}
           className={cn(
-            'inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold shadow-xs transition-all duration-150 cursor-pointer',
-            saving
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              : justSaved
-              ? 'bg-emerald-600 text-white'
-              : hasUnsavedChanges
-              ? 'bg-red-600 hover:bg-red-500 text-white hover:shadow-md'
-              : 'bg-red-600/90 hover:bg-red-600 text-white'
+            'btn-primary text-xs py-2 px-4 inline-flex items-center gap-1.5',
+            saving && 'opacity-60 cursor-not-allowed',
+            justSaved && 'bg-emerald-600 border-emerald-600 text-white'
           )}
         >
           {saving ? (
             <>
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span>Saving Notes...</span>
+              <span>Saving...</span>
             </>
           ) : justSaved ? (
             <>
               <Check className="w-3.5 h-3.5 text-white" />
-              <span>Notes Saved!</span>
+              <span>Saved!</span>
             </>
           ) : (
             <>

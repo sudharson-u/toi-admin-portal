@@ -90,8 +90,8 @@ export default async function DashboardPage() {
           <div key={card.label} className={cn('kpi-card border', card.border)}>
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-1">{card.label}</p>
-                <p className="text-3xl font-bold text-gray-900">{card.value}</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{card.label}</p>
+                <p className="text-3xl font-bold font-mono tracking-tight text-gray-900 dark:text-gray-100">{card.value}</p>
               </div>
               <div className={cn('p-2 rounded-xl', card.bg)}>
                 <card.icon className={cn('w-5 h-5', card.color)} />
@@ -202,9 +202,12 @@ export default async function DashboardPage() {
                   <Link key={customer.id} href={`/customers/${customer.id}`}
                     className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors">
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold text-gray-900 text-sm">{customer.customer_name}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm">{customer.customer_name}</p>
                       {customer.customer_id && !customer.customer_id.startsWith('TOI-') ? (
-                        <p className="text-xs text-gray-400 font-mono">ID: {customer.customer_id}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500 font-mono">ID: {customer.customer_id}</p>
+                      ) : null}
+                      {customer.address ? (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[240px] mt-0.5">{customer.address}</p>
                       ) : null}
                       <div className="flex items-center gap-3 mt-1.5">
                         <span className="text-xs text-gray-500">Expires {formatDate(sub.end_date)}</span>

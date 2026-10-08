@@ -3,10 +3,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, Filter, Plus, Phone, ArrowUpDown, ChevronLeft, ChevronRight, X, Download } from 'lucide-react';
+import { Search, Filter, Plus, Phone, ArrowUpDown, ChevronLeft, ChevronRight, X, Download, MapPin, CheckSquare, Square, FileText } from 'lucide-react';
 import { formatDate, calculateStatus, calculateDaysRemaining, getStatusLabel, getStatusColor, cn } from '@/lib/utils';
 import { SubscriptionStatus } from '@/lib/types';
 import AddCustomerDialog from '@/components/customers/AddCustomerDialog';
+import { generateCustomersPDF } from '@/lib/pdfGenerator';
 
 const PAGE_SIZE = 20;
 
@@ -41,6 +42,8 @@ export default function CustomersPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set());
+
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const fetchCustomers = useCallback(async () => {
@@ -67,7 +70,7 @@ export default function CustomersPage() {
 
   useEffect(() => {
     clearTimeout(searchTimeout.current);
-    searchTimeout.current = setTimeout(fetchCustomers, 300);
+    searchTimeout.current = setTimeout(fetchCustomers, 150);
     return () => clearTimeout(searchTimeout.current);
   }, [fetchCustomers]);
 
@@ -88,6 +91,49 @@ export default function CustomersPage() {
     setPage(1);
   }
 
+  // Selection Logic for Selected Customer(s) PDF Export
+  function toggleSelectCustomer(id: string) {
+    setSelectedCustomerIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  const allVisibleSelected = customers.length > 0 && customers.every(c => selectedCustomerIds.has(c.id));
+
+  function toggleSelectAllVisible() {
+    if (allVisibleSelected) {
+      setSelectedCustomerIds(prev => {
+        const next = new Set(prev);
+        customers.forEach(c => next.delete(c.id));
+        return next;
+      });
+    } else {
+      setSelectedCustomerIds(prev => {
+        const next = new Set(prev);
+        customers.forEach(c => next.add(c.id));
+        return next;
+      });
+    }
+  }
+
+  function handleDownloadSelectedPDF() {
+    const selected = customers.filter(c => selectedCustomerIds.has(c.id));
+    if (selected.length === 0) return;
+    generateCustomersPDF(
+      selected,
+      selected.length === 1
+        ? `${selected[0].customer_name} - Dossier`
+        : `${selected.length} Selected Customers Report`
+    );
+  }
+
+  function handleDownloadSingleCustomer(c: CustomerRow) {
+    generateCustomersPDF([c], `${c.customer_name} - Dossier`);
+  }
+
   const totalPages = Math.ceil(total / PAGE_SIZE);
   const today = new Date();
 
@@ -96,41 +142,89 @@ export default function CustomersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Customers</h1>
-          <p className="text-sm text-gray-500">{total} total records</p>
+          <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Customers</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-mono">{total} total records</p>
         </div>
-        <div className="sm:ml-auto flex gap-2">
-          <Link href="/import" className="btn-secondary text-sm">
-            <Download className="w-4 h-4" />
-            <span className="hidden sm:inline">Export</span>
+        <div className="sm:ml-auto flex items-center gap-2">
+          {/* Quick Selected Action Button if any selected */}
+          {selectedCustomerIds.size > 0 && (
+            <button
+              type="button"
+              id="download-selected-pdf-btn"
+              onClick={handleDownloadSelectedPDF}
+              className="btn-primary text-xs py-2 px-3 inline-flex items-center gap-1.5 shadow-sm bg-blue-600 hover:bg-blue-700 border-blue-600"
+              title="Download PDF of selected customers"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Download Selected PDF ({selectedCustomerIds.size})</span>
+            </button>
+          )}
+
+          <Link href="/import" className="btn-secondary text-xs py-2 px-3">
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Export Excel</span>
           </Link>
           <button
             id="add-customer-btn"
             onClick={() => setShowAddDialog(true)}
-            className="btn-primary text-sm"
+            className="btn-primary text-xs py-2 px-3"
           >
-            <Plus className="w-4 h-4" />
-            Add Customer
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Customer</span>
           </button>
         </div>
       </div>
 
+      {/* Floating / Sticky Selected Banner when customers are chosen */}
+      {selectedCustomerIds.size > 0 && (
+        <div className="card p-3 mb-4 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex flex-wrap items-center justify-between gap-3 fade-in">
+          <div className="flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold font-mono flex items-center justify-center">
+              {selectedCustomerIds.size}
+            </span>
+            <p className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-200">
+              {selectedCustomerIds.size} customer{selectedCustomerIds.size > 1 ? 's' : ''} selected for PDF download
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadSelectedPDF}
+              className="btn-primary text-xs py-1.5 px-3 bg-blue-600 hover:bg-blue-700 border-blue-600"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Generate PDF</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCustomerIds(new Set())}
+              className="btn-ghost text-xs py-1.5 px-2 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50"
+            >
+              Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Search + Filters */}
-      <div className="card p-4 mb-4 space-y-3">
-        {/* Search bar */}
+      <div className="card p-4 mb-4 space-y-3 border border-gray-200 dark:border-[#222E45]">
+        {/* Search bar with perfect icon alignment and padding */}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500 pointer-events-none" />
           <input
             id="customer-search"
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Search by name, ID, phone, order ID, address or date..."
-            className="form-input pl-9"
+            className="form-input input-with-search pr-10 text-sm"
           />
           {search && (
-            <button onClick={() => { setSearch(''); setPage(1); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+            <button
+              type="button"
+              onClick={() => { setSearch(''); setPage(1); }}
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            >
               <X className="w-4 h-4" />
             </button>
           )}
@@ -138,13 +232,13 @@ export default function CustomersPage() {
 
         {/* Filters row */}
         <div className="flex flex-wrap gap-2 items-center">
-          <Filter className="w-4 h-4 text-gray-400 flex-shrink-0" />
+          <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
 
           <select
             id="status-filter"
             value={statusFilter}
             onChange={(e) => { setStatusFilter(e.target.value as SubscriptionStatus | ''); setPage(1); }}
-            className="form-input w-auto min-w-[140px] py-2 text-sm"
+            className="form-input w-auto min-w-[140px] py-1.5 text-xs sm:text-sm"
           >
             <option value="">All Statuses</option>
             <option value="active">Active</option>
@@ -158,7 +252,7 @@ export default function CustomersPage() {
             id="expiry-filter"
             value={expiryFilter}
             onChange={(e) => { setExpiryFilter(e.target.value); setPage(1); }}
-            className="form-input w-auto min-w-[160px] py-2 text-sm"
+            className="form-input w-auto min-w-[160px] py-1.5 text-xs sm:text-sm"
           >
             <option value="">All Expiry</option>
             <option value="this_month">Expiring This Month</option>
@@ -176,7 +270,7 @@ export default function CustomersPage() {
               setSortDir(dir as 'asc' | 'desc');
               setPage(1);
             }}
-            className="form-input w-auto min-w-[160px] py-2 text-sm"
+            className="form-input w-auto min-w-[160px] py-1.5 text-xs sm:text-sm"
           >
             <option value="customer_name:asc">Name A–Z</option>
             <option value="customer_name:desc">Name Z–A</option>
@@ -187,16 +281,18 @@ export default function CustomersPage() {
           </select>
 
           {(search || statusFilter || expiryFilter) && (
-            <button onClick={clearFilters}
-              className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 font-medium">
+            <button
+              onClick={clearFilters}
+              className="flex items-center gap-1 text-xs font-semibold text-red-600 hover:text-red-700 dark:text-red-400 cursor-pointer ml-auto"
+            >
               <X className="w-3.5 h-3.5" /> Clear filters
             </button>
           )}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden">
+      {/* Table & Cards Container */}
+      <div className="card overflow-hidden border border-gray-200 dark:border-[#222E45]">
         {loading ? (
           <div className="p-8 space-y-3">
             {[...Array(5)].map((_, i) => (
@@ -205,19 +301,34 @@ export default function CustomersPage() {
           </div>
         ) : customers.length === 0 ? (
           <div className="text-center py-14">
-            <Search className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-500">No customers found</p>
+            <Search className="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No customers found</p>
             {(search || statusFilter) && (
-              <p className="text-xs text-gray-400 mt-1">Try adjusting your search or filters</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Try adjusting your search or filters</p>
             )}
           </div>
         ) : (
           <>
-            {/* Desktop table */}
+            {/* Desktop Table */}
             <div className="hidden md:block overflow-x-auto">
               <table className="data-table">
                 <thead>
                   <tr>
+                    {/* Checkbox select column */}
+                    <th className="w-10 px-3 text-center">
+                      <button
+                        type="button"
+                        onClick={toggleSelectAllVisible}
+                        className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+                        title={allVisibleSelected ? 'Deselect all visible' : 'Select all visible'}
+                      >
+                        {allVisibleSelected ? (
+                          <CheckSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        ) : (
+                          <Square className="w-4 h-4" />
+                        )}
+                      </button>
+                    </th>
                     {[
                       { key: 'customer_id', label: 'Customer ID' },
                       { key: 'customer_name', label: 'Customer' },
@@ -229,15 +340,15 @@ export default function CustomersPage() {
                       <th key={col.key}>
                         <button
                           onClick={() => handleSort(col.key)}
-                          className="flex items-center gap-1 hover:text-gray-700 transition-colors"
+                          className="flex items-center gap-1 hover:text-gray-900 dark:hover:text-gray-100 transition-colors cursor-pointer"
                         >
                           {col.label}
-                          <ArrowUpDown className={cn('w-3 h-3', sortBy === col.key ? 'text-blue-500' : 'text-gray-300')} />
+                          <ArrowUpDown className={cn('w-3 h-3', sortBy === col.key ? 'text-blue-500' : 'text-gray-300 dark:text-gray-600')} />
                         </button>
                       </th>
                     ))}
                     <th>Status</th>
-                    <th>Actions</th>
+                    <th className="text-right pr-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -245,45 +356,79 @@ export default function CustomersPage() {
                     const sub = customer.subscriptions?.[0];
                     const status = sub ? calculateStatus(sub.end_date, today) : 'expired';
                     const days = sub ? calculateDaysRemaining(sub.end_date, today) : null;
+                    const isSelected = selectedCustomerIds.has(customer.id);
+
                     return (
-                      <tr key={customer.id}>
-                        <td className="font-mono text-xs text-gray-600">
+                      <tr key={customer.id} className={cn(isSelected && 'bg-blue-50/50 dark:bg-blue-950/20')}>
+                        {/* Row Checkbox */}
+                        <td className="px-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => toggleSelectCustomer(customer.id)}
+                            className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
+                            title="Select customer for PDF export"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+                        </td>
+
+                        <td className="font-mono text-xs text-gray-600 dark:text-gray-400">
                           {customer.customer_id && !customer.customer_id.startsWith('TOI-') ? customer.customer_id : '—'}
                         </td>
+
+                        {/* Customer Name & Address */}
                         <td>
-                          <div className="font-medium text-gray-900">{customer.customer_name}</div>
-                          <div className="text-xs text-gray-400 truncate max-w-[200px]" title={customer.address}>
-                            {customer.address}
-                          </div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{customer.customer_name}</div>
+                          {customer.address ? (
+                            <div className="text-xs text-gray-400 dark:text-gray-500 truncate max-w-[220px]" title={customer.address}>
+                              {customer.address}
+                            </div>
+                          ) : null}
                         </td>
+
                         <td>
                           <a href={`tel:+91${customer.mobile_number}`}
-                            className="flex items-center gap-1 text-blue-600 hover:text-blue-700 text-sm">
+                            className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
                             <Phone className="w-3.5 h-3.5" />
                             {customer.mobile_number}
                           </a>
                         </td>
-                        <td className="text-xs font-mono text-gray-500">{customer.order_id}</td>
-                        <td className="text-sm text-gray-600">{sub ? formatDate(sub.start_date) : '—'}</td>
-                        <td className="text-sm font-medium text-gray-800">{sub ? formatDate(sub.end_date) : '—'}</td>
+
+                        <td className="text-xs font-mono text-gray-500 dark:text-gray-400">{customer.order_id}</td>
+                        <td className="text-sm font-mono text-gray-600 dark:text-gray-400">{sub ? formatDate(sub.start_date) : '—'}</td>
+                        <td className="text-sm font-medium font-mono text-gray-800 dark:text-gray-200">{sub ? formatDate(sub.end_date) : '—'}</td>
+
                         <td>
                           <div className="flex items-center gap-2">
                             <span className={cn('status-badge', getStatusColor(status))}>
                               {getStatusLabel(status)}
                             </span>
-                            {days !== null && days >= 0 && (
-                              <span className="text-xs text-gray-400">{days}d</span>
+                            {days !== null && (
+                              <span className="text-xs font-mono text-gray-400 dark:text-gray-500">{days}d</span>
                             )}
                           </div>
                         </td>
-                        <td>
-                          <div className="flex items-center gap-2">
+
+                        <td className="text-right pr-4">
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadSingleCustomer(customer)}
+                              className="text-xs font-medium text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 p-1"
+                              title="Download PDF for this customer"
+                            >
+                              <Download className="w-3.5 h-3.5" />
+                            </button>
                             <Link href={`/customers/${customer.id}`}
-                              className="text-xs font-medium text-blue-600 hover:text-blue-700">
+                              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1">
                               View
                             </Link>
                             <Link href={`/customers/${customer.id}/edit`}
-                              className="text-xs font-medium text-gray-500 hover:text-gray-700">
+                              className="text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 px-1">
                               Edit
                             </Link>
                           </div>
@@ -295,54 +440,91 @@ export default function CustomersPage() {
               </table>
             </div>
 
-            {/* Mobile cards */}
-            <div className="md:hidden divide-y divide-gray-50">
+            {/* Mobile Cards with Address Display and Selection */}
+            <div className="md:hidden divide-y divide-gray-100 dark:divide-[#222E45]">
               {customers.map((customer) => {
                 const sub = customer.subscriptions?.[0];
                 const status = sub ? calculateStatus(sub.end_date, today) : 'expired';
                 const days = sub ? calculateDaysRemaining(sub.end_date, today) : null;
+                const isSelected = selectedCustomerIds.has(customer.id);
+
                 return (
-                  <div key={customer.id} className="p-4">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="font-semibold text-gray-900">{customer.customer_name}</p>
-                        {customer.customer_id && !customer.customer_id.startsWith('TOI-') ? (
-                          <p className="text-xs text-gray-400 font-mono">ID: {customer.customer_id}</p>
-                        ) : null}
+                  <div key={customer.id} className={cn('p-4 transition-colors', isSelected && 'bg-blue-50/60 dark:bg-blue-950/20')}>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="flex items-start gap-2.5 min-w-0">
+                        {/* Mobile Checkbox */}
+                        <button
+                          type="button"
+                          onClick={() => toggleSelectCustomer(customer.id)}
+                          className="mt-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer flex-shrink-0"
+                          title="Select customer"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
+                          ) : (
+                            <Square className="w-4.5 h-4.5" />
+                          )}
+                        </button>
+                        <div className="min-w-0">
+                          <p className="font-bold text-gray-900 dark:text-gray-100 text-sm tracking-tight">{customer.customer_name}</p>
+                          {customer.customer_id && !customer.customer_id.startsWith('TOI-') ? (
+                            <p className="text-[11px] text-gray-400 dark:text-gray-500 font-mono">ID: {customer.customer_id}</p>
+                          ) : null}
+
+                          {/* Customer Address Below Customer Name */}
+                          {customer.address && (
+                            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1 flex items-start gap-1 leading-relaxed">
+                              <MapPin className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500 flex-shrink-0 mt-0.5" />
+                              <span className="line-clamp-2">{customer.address}</span>
+                            </p>
+                          )}
+                        </div>
                       </div>
-                      <span className={cn('status-badge text-[10px]', getStatusColor(status))}>
+
+                      <span className={cn('status-badge text-[10px] whitespace-nowrap', getStatusColor(status))}>
                         {getStatusLabel(status)}
                       </span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-3">
+
+                    <div className="grid grid-cols-2 gap-2 text-xs text-gray-500 dark:text-gray-400 my-3 pt-1">
                       <div>
-                        <span className="font-medium text-gray-400">Phone</span>
+                        <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Phone</span>
                         <p>
-                          <a href={`tel:+91${customer.mobile_number}`} className="text-blue-600">
+                          <a href={`tel:+91${customer.mobile_number}`} className="text-blue-600 dark:text-blue-400 font-medium">
                             📞 {customer.mobile_number}
                           </a>
                         </p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-400">Order ID</span>
+                        <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Order ID</span>
                         <p className="font-mono">{customer.order_id}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-400">Start</span>
-                        <p>{sub ? formatDate(sub.start_date) : '—'}</p>
+                        <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Start</span>
+                        <p className="font-mono">{sub ? formatDate(sub.start_date) : '—'}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-400">Expires</span>
-                        <p className="font-medium text-gray-700">{sub ? formatDate(sub.end_date) : '—'}</p>
+                        <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Expires</span>
+                        <p className="font-medium font-mono text-gray-700 dark:text-gray-200">{sub ? formatDate(sub.end_date) : '—'}</p>
                       </div>
                     </div>
-                    <div className="flex gap-2">
+
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadSingleCustomer(customer)}
+                        className="btn-secondary text-xs py-1.5 px-2.5 rounded-lg inline-flex items-center gap-1"
+                        title="Download PDF"
+                      >
+                        <Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>PDF</span>
+                      </button>
                       <Link href={`/customers/${customer.id}`}
-                        className="btn-primary text-xs py-1.5 flex-1 justify-center">
+                        className="btn-primary text-xs py-1.5 flex-1 justify-center rounded-lg">
                         View Profile
                       </Link>
                       <Link href={`/customers/${customer.id}/edit`}
-                        className="btn-secondary text-xs py-1.5 flex-1 justify-center">
+                        className="btn-secondary text-xs py-1.5 flex-1 justify-center rounded-lg">
                         Edit
                       </Link>
                     </div>
@@ -355,8 +537,8 @@ export default function CustomersPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-50">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 dark:border-[#222E45]">
+            <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">
               Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
             </p>
             <div className="flex items-center gap-1">
@@ -367,7 +549,7 @@ export default function CustomersPage() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-xs text-gray-600 px-2">
+              <span className="text-xs font-mono text-gray-600 dark:text-gray-400 px-2">
                 {page} / {totalPages}
               </span>
               <button
