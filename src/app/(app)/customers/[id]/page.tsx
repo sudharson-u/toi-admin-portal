@@ -254,7 +254,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                     <p className="text-xs text-gray-400 mb-1">Start Date</p>
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                      <p className="text-sm font-medium text-gray-800">{formatDate(currentSub.start_date)}</p>
+                      <p className="text-sm font-medium text-gray-800 whitespace-nowrap">{formatDate(currentSub.start_date)}</p>
                     </div>
                   </div>
                   <div>
@@ -262,7 +262,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-3.5 h-3.5 text-gray-400" />
                       <p className={cn(
-                        'text-sm font-semibold',
+                        'text-sm font-semibold whitespace-nowrap',
                         status === 'expired' ? 'text-red-600' :
                           status === 'expiring_this_month' ? 'text-orange-600' :
                             status === 'renew_soon' ? 'text-amber-600' : 'text-gray-800'
@@ -326,7 +326,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
                   >
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-gray-600 whitespace-nowrap">
                         {formatDate(sub.start_date)} → {formatDate(sub.end_date)}
                       </span>
                     </div>

@@ -100,12 +100,12 @@ export default function RenewalCustomerCard({ customer, todayString }: RenewalCu
                   </a>
                 )}
 
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 whitespace-nowrap">
                   <Calendar className="w-3 h-3 text-gray-400 flex-shrink-0" />
                   <span>Expires <strong className="text-gray-700 dark:text-gray-200">{formatDate(sub.end_date)}</strong></span>
                 </span>
 
-                <span className="flex items-center gap-1 text-gray-400 dark:text-gray-500">
+                <span className="flex items-center gap-1 text-gray-400 dark:text-gray-500 whitespace-nowrap">
                   <Clock className="w-3 h-3 flex-shrink-0" />
                   <span>Reminder: {formatDate(notifDate)}</span>
                 </span>

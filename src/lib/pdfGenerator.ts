@@ -21,11 +21,17 @@ export interface PDFCustomerItem {
 
 function formatDateSafe(dateStr?: string | null): string {
   if (!dateStr) return '—';
+  const clean = dateStr.trim();
+  // Already in dd/MM/yyyy format
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(clean)) return clean;
+  // If in yyyy-MM-dd format
   try {
-    return format(parseISO(dateStr), 'dd/MM/yyyy');
-  } catch {
-    return dateStr;
-  }
+    const parsed = parseISO(clean);
+    if (!isNaN(parsed.getTime())) {
+      return format(parsed, 'dd/MM/yyyy');
+    }
+  } catch { }
+  return clean;
 }
 
 export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?: string) {
@@ -59,8 +65,8 @@ export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?:
     startY: 8,
     margin: { left: 8, right: 8, top: 8, bottom: 12 },
     styles: {
-      fontSize: 7.5,
-      cellPadding: 2,
+      fontSize: 7.2,
+      cellPadding: { top: 2, bottom: 2, left: 1.2, right: 1.2 },
       textColor: [15, 23, 42],
       lineColor: [226, 232, 240],
       lineWidth: 0.1,
@@ -70,21 +76,21 @@ export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?:
       fillColor: [30, 58, 138], // #1E3A8A Navy Blue matching screenshot
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 7.8,
+      fontSize: 7.5,
       halign: 'left',
     },
     alternateRowStyles: {
       fillColor: [255, 255, 255],
     },
     columnStyles: {
-      0: { cellWidth: 8, halign: 'center' }, // #
-      1: { cellWidth: 20, fontStyle: 'bold' }, // Customer ID (bold matching screenshot)
-      2: { cellWidth: 30 }, // Customer Name
-      3: { cellWidth: 58 }, // Complete Address (full wrap)
-      4: { cellWidth: 22 }, // Mobile Number
-      5: { cellWidth: 24 }, // Order ID
-      6: { cellWidth: 16, halign: 'center' }, // Start Date
-      7: { cellWidth: 16, halign: 'center' }, // End Date
+      0: { cellWidth: 7, halign: 'center' }, // #
+      1: { cellWidth: 19, fontStyle: 'bold' }, // Customer ID (bold matching screenshot)
+      2: { cellWidth: 28 }, // Customer Name
+      3: { cellWidth: 54 }, // Complete Address (full wrap)
+      4: { cellWidth: 21 }, // Mobile Number
+      5: { cellWidth: 25 }, // Order ID
+      6: { cellWidth: 20, halign: 'center' }, // Start Date on a single line
+      7: { cellWidth: 20, halign: 'center' }, // End Date on a single line
     },
     didDrawPage: (data: any) => {
       const pageCount = (doc as any).internal.getNumberOfPages();

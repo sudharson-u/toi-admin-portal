@@ -398,9 +398,9 @@ export default function CustomersPage() {
                           </a>
                         </td>
 
-                        <td className="text-xs font-mono text-gray-500 dark:text-gray-400">{customer.order_id}</td>
-                        <td className="text-sm font-mono text-gray-600 dark:text-gray-400">{sub ? formatDate(sub.start_date) : '—'}</td>
-                        <td className="text-sm font-medium font-mono text-gray-800 dark:text-gray-200">{sub ? formatDate(sub.end_date) : '—'}</td>
+                        <td className="text-xs font-mono text-gray-500 dark:text-gray-400 whitespace-nowrap">{customer.order_id}</td>
+                        <td className="text-sm font-mono text-gray-600 dark:text-gray-400 whitespace-nowrap">{sub ? formatDate(sub.start_date) : '—'}</td>
+                        <td className="text-sm font-medium font-mono text-gray-800 dark:text-gray-200 whitespace-nowrap">{sub ? formatDate(sub.end_date) : '—'}</td>
 
                         <td>
                           <div className="flex items-center gap-2">
@@ -501,11 +501,11 @@ export default function CustomersPage() {
                       </div>
                       <div>
                         <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Start</span>
-                        <p className="font-mono">{sub ? formatDate(sub.start_date) : '—'}</p>
+                        <p className="font-mono whitespace-nowrap">{sub ? formatDate(sub.start_date) : '—'}</p>
                       </div>
                       <div>
                         <span className="font-medium text-gray-400 dark:text-gray-500 text-[11px]">Expires</span>
-                        <p className="font-medium font-mono text-gray-700 dark:text-gray-200">{sub ? formatDate(sub.end_date) : '—'}</p>
+                        <p className="font-medium font-mono text-gray-700 dark:text-gray-200 whitespace-nowrap">{sub ? formatDate(sub.end_date) : '—'}</p>
                       </div>
                     </div>
 

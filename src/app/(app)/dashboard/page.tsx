@@ -163,7 +163,7 @@ export default async function DashboardPage() {
                           </a>
                         </td>
                         <td className="text-xs text-gray-500 font-mono">{customer.order_id}</td>
-                        <td className="font-medium text-gray-800">{formatDate(sub.end_date)}</td>
+                        <td className="font-medium text-gray-800 whitespace-nowrap">{formatDate(sub.end_date)}</td>
                         <td>
                           <span className={cn(
                             'font-semibold text-sm',
@@ -210,7 +210,7 @@ export default async function DashboardPage() {
                         <p className="text-xs text-gray-500 dark:text-gray-400 truncate max-w-[240px] mt-0.5">{customer.address}</p>
                       ) : null}
                       <div className="flex items-center gap-3 mt-1.5">
-                        <span className="text-xs text-gray-500">Expires {formatDate(sub.end_date)}</span>
+                        <span className="text-xs text-gray-500 whitespace-nowrap">Expires {formatDate(sub.end_date)}</span>
                         <span className={cn('status-badge text-[10px]', getStatusColor(status))}>
                           {getStatusLabel(status)}
                         </span>
