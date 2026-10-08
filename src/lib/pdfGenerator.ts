@@ -29,47 +29,11 @@ function formatDateSafe(dateStr?: string | null): string {
 }
 
 export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?: string) {
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const title = customTitle || (customers.length === 1 ? 'Customer Subscription Profile' : 'Selected Customers Report');
+  // Portrait A4 (210mm x 297mm) - Vertical format matching exact table layout
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const now = new Date();
-  const dateFormatted = format(now, 'dd MMM yyyy, hh:mm a');
 
-  // Header Banner: Times of India Navy
-  doc.setFillColor(30, 58, 138); // #1E3A8A
-  doc.rect(0, 0, 297, 24, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(255, 255, 255);
-  doc.text('THE TIMES OF INDIA', 14, 11);
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(224, 231, 255);
-  doc.text('Subscription & Circulation Management • Circulation Head: Umapathy', 14, 18);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(255, 255, 255);
-  doc.text(title.toUpperCase(), 283, 11, { align: 'right' });
-
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(224, 231, 255);
-  doc.text(`Generated: ${dateFormatted}`, 283, 18, { align: 'right' });
-
-  // Metadata Bar
-  doc.setFillColor(241, 245, 249);
-  doc.roundedRect(14, 28, 269, 11, 2, 2, 'F');
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.setTextColor(30, 41, 59);
-  doc.text(`Scope: ${customers.length === 1 ? customers[0].customer_name : 'Selected Subscriptions'}`, 18, 35);
-  doc.text(`Total Records: ${customers.length}`, 115, 35);
-  doc.text(`Source: Master Circulation Database`, 205, 35);
-
-  // Table Data
+  // Table Data Preparation
   const tableData = customers.map((c, index) => {
     const sub = c.subscriptions?.find(s => s.is_current) || c.subscriptions?.[0];
     const sDate = formatDateSafe(sub?.start_date);
@@ -88,48 +52,51 @@ export function generateCustomersPDF(customers: PDFCustomerItem[], customTitle?:
     ];
   });
 
+  // Table directly at the top with exact column structure and styling from screenshot
   autoTable(doc, {
     head: [['#', 'Customer ID', 'Customer Name', 'Complete Address', 'Mobile Number', 'Order ID', 'Start Date', 'End Date']],
     body: tableData.length > 0 ? tableData : [['—', '—', 'No records found', '—', '—', '—', '—', '—']],
-    startY: 43,
-    margin: { left: 14, right: 14, bottom: 16 },
+    startY: 8,
+    margin: { left: 8, right: 8, top: 8, bottom: 12 },
     styles: {
-      fontSize: 8,
-      cellPadding: 2.5,
+      fontSize: 7.5,
+      cellPadding: 2,
       textColor: [15, 23, 42],
       lineColor: [226, 232, 240],
       lineWidth: 0.1,
-      overflow: 'linebreak',
+      overflow: 'linebreak', // Full wrapping for address and details without clipping
     },
     headStyles: {
-      fillColor: [30, 58, 138],
+      fillColor: [30, 58, 138], // #1E3A8A Navy Blue matching screenshot
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 8.5,
+      fontSize: 7.8,
       halign: 'left',
     },
     alternateRowStyles: {
-      fillColor: [248, 250, 252],
+      fillColor: [255, 255, 255],
     },
     columnStyles: {
-      0: { cellWidth: 10, halign: 'center' },
-      1: { cellWidth: 26, fontStyle: 'bold' },
-      2: { cellWidth: 42 },
-      3: { cellWidth: 92 },
-      4: { cellWidth: 26 },
-      5: { cellWidth: 30 },
-      6: { cellWidth: 21, halign: 'center' },
-      7: { cellWidth: 22, halign: 'center' },
+      0: { cellWidth: 8, halign: 'center' }, // #
+      1: { cellWidth: 20, fontStyle: 'bold' }, // Customer ID (bold matching screenshot)
+      2: { cellWidth: 30 }, // Customer Name
+      3: { cellWidth: 58 }, // Complete Address (full wrap)
+      4: { cellWidth: 22 }, // Mobile Number
+      5: { cellWidth: 24 }, // Order ID
+      6: { cellWidth: 16, halign: 'center' }, // Start Date
+      7: { cellWidth: 16, halign: 'center' }, // End Date
     },
     didDrawPage: (data: any) => {
       const pageCount = (doc as any).internal.getNumberOfPages();
-      doc.setFontSize(8);
+      doc.setFontSize(7.5);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(148, 163, 184);
-
-      doc.text(`Page ${data.pageNumber} of ${pageCount}`, 148.5, 204, { align: 'center' });
-      doc.text('The Times of India • Confidential Circulation Document', 14, 204);
-      doc.text('For Official Circulation Use Only', 283, 204, { align: 'right' });
+      doc.text(
+        `Page ${data.pageNumber} of ${pageCount}`,
+        105,
+        292,
+        { align: 'center' }
+      );
     },
   });
 
