@@ -42,7 +42,7 @@ export default function CustomersPage() {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState<Set<string>>(new Set());
+  const [selectedCustomersMap, setSelectedCustomersMap] = useState<Map<string, CustomerRow>>(new Map());
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -62,6 +62,19 @@ export default function CustomersPage() {
       const data = await res.json();
       setCustomers(data.customers || []);
       setTotal(data.total || 0);
+
+      // Keep selected customers fresh if any of them were fetched in this batch
+      setSelectedCustomersMap(prev => {
+        let changed = false;
+        const next = new Map(prev);
+        (data.customers || []).forEach((c: CustomerRow) => {
+          if (next.has(c.id)) {
+            next.set(c.id, c);
+            changed = true;
+          }
+        });
+        return changed ? next : prev;
+      });
     } catch (e) {
       console.error(e);
     }
@@ -92,35 +105,35 @@ export default function CustomersPage() {
   }
 
   // Selection Logic for Selected Customer(s) PDF Export
-  function toggleSelectCustomer(id: string) {
-    setSelectedCustomerIds(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+  function toggleSelectCustomer(customer: CustomerRow) {
+    setSelectedCustomersMap(prev => {
+      const next = new Map(prev);
+      if (next.has(customer.id)) next.delete(customer.id);
+      else next.set(customer.id, customer);
       return next;
     });
   }
 
-  const allVisibleSelected = customers.length > 0 && customers.every(c => selectedCustomerIds.has(c.id));
+  const allVisibleSelected = customers.length > 0 && customers.every(c => selectedCustomersMap.has(c.id));
 
   function toggleSelectAllVisible() {
     if (allVisibleSelected) {
-      setSelectedCustomerIds(prev => {
-        const next = new Set(prev);
+      setSelectedCustomersMap(prev => {
+        const next = new Map(prev);
         customers.forEach(c => next.delete(c.id));
         return next;
       });
     } else {
-      setSelectedCustomerIds(prev => {
-        const next = new Set(prev);
-        customers.forEach(c => next.add(c.id));
+      setSelectedCustomersMap(prev => {
+        const next = new Map(prev);
+        customers.forEach(c => next.set(c.id, c));
         return next;
       });
     }
   }
 
   function handleDownloadSelectedPDF() {
-    const selected = customers.filter(c => selectedCustomerIds.has(c.id));
+    const selected = Array.from(selectedCustomersMap.values());
     if (selected.length === 0) return;
     generateCustomersPDF(
       selected,
@@ -147,7 +160,7 @@ export default function CustomersPage() {
         </div>
         <div className="sm:ml-auto flex items-center gap-2">
           {/* Quick Selected Action Button if any selected */}
-          {selectedCustomerIds.size > 0 && (
+          {selectedCustomersMap.size > 0 && (
             <button
               type="button"
               id="download-selected-pdf-btn"
@@ -156,7 +169,7 @@ export default function CustomersPage() {
               title="Download PDF of selected customers"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Download Selected PDF ({selectedCustomerIds.size})</span>
+              <span>Download Selected PDF ({selectedCustomersMap.size})</span>
             </button>
           )}
 
@@ -176,14 +189,14 @@ export default function CustomersPage() {
       </div>
 
       {/* Floating / Sticky Selected Banner when customers are chosen */}
-      {selectedCustomerIds.size > 0 && (
+      {selectedCustomersMap.size > 0 && (
         <div className="card p-3 mb-4 bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 flex flex-wrap items-center justify-between gap-3 fade-in">
           <div className="flex items-center gap-2">
             <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold font-mono flex items-center justify-center">
-              {selectedCustomerIds.size}
+              {selectedCustomersMap.size}
             </span>
             <p className="text-xs sm:text-sm font-semibold text-blue-900 dark:text-blue-200">
-              {selectedCustomerIds.size} customer{selectedCustomerIds.size > 1 ? 's' : ''} selected for PDF download
+              {selectedCustomersMap.size} customer{selectedCustomersMap.size > 1 ? 's' : ''} selected for PDF download
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -197,7 +210,7 @@ export default function CustomersPage() {
             </button>
             <button
               type="button"
-              onClick={() => setSelectedCustomerIds(new Set())}
+              onClick={() => setSelectedCustomersMap(new Map())}
               className="btn-ghost text-xs py-1.5 px-2 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/50"
             >
               Clear
@@ -356,7 +369,7 @@ export default function CustomersPage() {
                     const sub = customer.subscriptions?.[0];
                     const status = sub ? calculateStatus(sub.end_date, today) : 'expired';
                     const days = sub ? calculateDaysRemaining(sub.end_date, today) : null;
-                    const isSelected = selectedCustomerIds.has(customer.id);
+                    const isSelected = selectedCustomersMap.has(customer.id);
 
                     return (
                       <tr key={customer.id} className={cn(isSelected && 'bg-blue-50/50 dark:bg-blue-950/20')}>
@@ -364,7 +377,7 @@ export default function CustomersPage() {
                         <td className="px-3 text-center">
                           <button
                             type="button"
-                            onClick={() => toggleSelectCustomer(customer.id)}
+                            onClick={() => toggleSelectCustomer(customer)}
                             className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer"
                             title="Select customer for PDF export"
                           >
@@ -446,7 +459,7 @@ export default function CustomersPage() {
                 const sub = customer.subscriptions?.[0];
                 const status = sub ? calculateStatus(sub.end_date, today) : 'expired';
                 const days = sub ? calculateDaysRemaining(sub.end_date, today) : null;
-                const isSelected = selectedCustomerIds.has(customer.id);
+                const isSelected = selectedCustomersMap.has(customer.id);
 
                 return (
                   <div key={customer.id} className={cn('p-4 transition-colors', isSelected && 'bg-blue-50/60 dark:bg-blue-950/20')}>
@@ -455,7 +468,7 @@ export default function CustomersPage() {
                         {/* Mobile Checkbox */}
                         <button
                           type="button"
-                          onClick={() => toggleSelectCustomer(customer.id)}
+                          onClick={() => toggleSelectCustomer(customer)}
                           className="mt-0.5 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 cursor-pointer flex-shrink-0"
                           title="Select customer"
                         >
